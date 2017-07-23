@@ -17,9 +17,15 @@ try {
 Object.keys(classes).forEach(classId => {
   const classData = classes[classId];
   if (!classStrings[classData.name.toLowerCase()]) classStrings[classData.name.toLowerCase()] = classId;
-  const fullShortName = classData.fullName.split(' ').slice(0, 4).join(' ');
-  classStrings[fullShortName.toLowerCase()] = classId;
-  classStrings[fullShortName.toLowerCase().replace(' -', '')] = classId;
+  const nameArr = classData.fullName.split(' ').slice(0, 4);
+
+  classStrings[nameArr.join(' ').toLowerCase()] = classId;
+  classStrings[nameArr.join(' ').toLowerCase().replace(' -', '')] = classId;
+
+  if (parseInt(nameArr[3]) < 10) {
+    classStrings[classData.name.toLowerCase()+' - '+nameArr[3].slice(1)] = classId;
+    classStrings[classData.name.toLowerCase()+' '+nameArr[3].slice(1)] = classId;
+  }
 });
 
 client.on('ready', () => {
