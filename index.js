@@ -120,7 +120,7 @@ client.on('message', msg => {
         const emote = msg.guild.emojis.find('name', emoji) || EMOJI_MAPPING[emoji] || emojiLib.get(emoji);
         setTimeout(() => msgObj.react(emote), index*500);
       });
-      if (!match[2] || !msg.author.id != '125696820901838849') setTimeout(() => msgObj.react('🗑'), Object.keys(config.get('emojis')[selectorType]).length*500);
+      if (!match[2] || !msg.member.roles.find('id', config.get('adminRoleId'))) setTimeout(() => msgObj.react('🗑'), Object.keys(config.get('emojis')[selectorType]).length*500);
     }).catch(err => {
       console.log('Error sending message', err);
     });
@@ -165,6 +165,7 @@ client.on('messageReactionAdd', (reactionObj, user) => {
   if (roleName) {
     const allRoles = Object.values(emojiToRole);
     reactionObj.message.guild.fetchMember(user).then(member => {
+      setTimeout(() => reactionObj.remove(user), 200);
       // Remove roles relating to message
       member.removeRoles(member.roles.filterArray(role => allRoles.includes(role.name)));
       setTimeout(() => member.addRole(reactionObj.message.guild.roles.find('name', roleName)), 100);
@@ -176,6 +177,7 @@ client.on('messageReactionAdd', (reactionObj, user) => {
 });
 
 client.on('messageReactionRemove', (reactionObj, user) => {
+  return; // Not used ATM
   if (!reactionObj.message.guild) return;
   if (user == client.user) return;
   const {roleName, type} = getRoleFromReaction(reactionObj);
@@ -199,13 +201,18 @@ function getRoleFromReaction(reactionObj) {
     const key = emojiSelectorKeys[i]
     const text = emojiSelectors[key];
     if (reactionObj.message.content.slice(0, text.length) == text) {
-      let name = reactionObj.emoji.name;
-      if (Object.values(EMOJI_MAPPING).includes(name)) name = Object.keys(EMOJI_MAPPING)[Object.values(EMOJI_MAPPING).indexOf(name)];
+      let name = emojiNameToSymbol(reactionObj.emoji.name);
       return { roleName: config.get('emojis')[key][name], type: key };
     }
   }
 
   return {role: null, type: null};
+}
+
+function emojiNameToSymbol(str) {
+  return Object.values(EMOJI_MAPPING).includes(str) ?
+    Object.keys(EMOJI_MAPPING)[Object.values(EMOJI_MAPPING).indexOf(str)] :
+    str;
 }
 
 client.login(config.get('discord.token'));
