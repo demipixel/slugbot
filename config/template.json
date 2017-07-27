@@ -1,5 +1,41 @@
 {
   "discord": {
     "token": ""
+  },
+
+  "classSearch": {
+    "term": "2178",
+    "interval": 21600
+  },
+
+  "emojis": {
+    "colleges": {
+      "co": "Cowell",
+      "regional_indicator_s": "Stevenson",
+      "cr": "Crown",
+      "regional_indicator_m": "Merrill",
+      "regional_indicator_p": "Porter",
+      "regional_indicator_k": "Kresge",
+      "regional_indicator_o": "Oakes",
+      "regional_indicator_r": "RCC",
+      "nine": "C9",
+      "keycap_ten": "C10"
+    },
+
+    "years": {
+      "eight": "CO2018",
+      "nine": "CO2019",
+      "zero": "CO2020",
+      "one": "CO2021",
+      "regional_indicator_a": "Alumni"
+    }
+  },
+  "selectorChannel": "",
+
+  "messages": {
+    "emojiSelectors": {
+      "colleges": "Select which college you are in:",
+      "years": "Select what year you will graduate (CO -> Class Of):"
+    }
   }
 }
