@@ -47,7 +47,7 @@ const EMOJI_MAPPING = {
   seven: '7⃣',
   eight: '8⃣',
   nine: '9⃣',
-  keypad_ten: '🔟'
+  keycap_ten: '🔟'
 }
 
 try {
