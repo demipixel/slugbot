@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cleverbot-node": "^0.3.11",
     "config": "^1.26.1",
     "discord.js": "^11.1.0",
     "node-emoji": "^1.8.1",

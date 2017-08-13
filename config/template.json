@@ -2,6 +2,7 @@
   "discord": {
     "token": ""
   },
+  "cleverbotApiKey": "",
 
   "classSearch": {
     "term": "2178",

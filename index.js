@@ -3,6 +3,17 @@ const config = require('config');
 const fs = require('fs');
 const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
+const CleverBot = require('cleverbot-node');
+
+const clever = new CleverBot();
+clever.configure({botapi: config.get('cleverbotApiKey')})
+try {
+  CleverBot.prepare(function() {
+    console.log('CleverBot is online');
+  });
+} catch (err) {
+  console.log('Cannot put CleverBot online!');
+}
 
 const client = new Discord.Client();
 
@@ -123,6 +134,13 @@ client.on('message', msg => {
       if (!match[2] || !msg.member.roles.find('id', config.get('adminRoleId'))) setTimeout(() => msgObj.react('🗑'), Object.keys(config.get('emojis')[selectorType]).length*500);
     }).catch(err => {
       console.log('Error sending message', err);
+    });
+  } else if (msg.mentions.users.find(user => user.id == client.user.id)) {
+    clever.write(msg.content.replace(client.user.toString(), '').trim(), (resp) => {
+      if (!resp || resp.error) {
+        msg.reply('I don\'t know how to respond...');
+      }
+      else msg.reply(resp.message.replace(/\*/g, '\\*'));
     });
   }
 });
