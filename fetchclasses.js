@@ -44,7 +44,7 @@ function fetchClasses(term, classNumbers, classes, cb) {
 
   const fetch = (number) => {
     request.post('https://pisa.ucsc.edu/class_search/', {form: {action: 'detail', 'class_data[:STRM]': term, 'class_data[:CLASS_NBR]': number}}, (err, http, body) => {
-      if (err) console.log('Error fetching '+link, err);
+      if (err) console.log('Error fetching classes', err);
       else {
         const classData = parseClass(body);
         classes[classData.classNumber] = classData;

@@ -27,7 +27,9 @@
       "nine": "CO2019",
       "zero": "CO2020",
       "one": "CO2021",
-      "regional_indicator_a": "Alumni"
+      "regional_indicator_a": "Alumni",
+      "regional_indicator_g": "Graduate",
+      "regional_indicator_v": "Visitor"
     }
   },
   "selectorChannel": "",
