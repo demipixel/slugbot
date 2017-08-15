@@ -157,7 +157,7 @@ function getClassEmbed(classData) {
       {name: 'Career', value: classData.career[0].toUpperCase() + classData.career.slice(1), inline: true},
       {name: 'Gen Ed', value: classData.generalEducation.toUpperCase() || 'None', inline: true},
       {name: 'Enrollment', value: classData.enrolled+'/'+classData.enrollmentCapacity, inline: true},
-      {name: 'Wait List', value: (classData.waitListTotal - classData.waitListCapacity)+'/'+classData.waitListTotal, inline: true},
+      {name: 'Wait List', value: classData.waitListTotal+'/'+classData.waitListCapacity, inline: true},
       {name: 'Instructor', value: classData.meeting.instructor, inline:true},
       {name: 'Time', value: classData.meeting.time, inline: true},
       {name: 'Location', value: classData.meeting.room, inline: true},
