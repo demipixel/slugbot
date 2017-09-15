@@ -34,7 +34,7 @@
     }
   },
   "selectorChannel": "",
-  "adminRoleId": "",
+  "adminRoleName": "",
 
   "messages": {
     "emojiSelectors": {
