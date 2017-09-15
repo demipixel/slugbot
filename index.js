@@ -59,7 +59,9 @@ const EMOJI_MAPPING = {
   eight: '8⃣',
   nine: '9⃣',
   keycap_ten: '🔟'
-}
+};
+
+const MAJORS = {"UND":"Undeclared","UNON":"Non Degree","ANTH":"Anthropology","APPH":"Applied Physics","ART":"Art","ARTG":"Art And Design: Games And Playable Media","ARTH":"See History Of Art And Visual Culture","BENG":"Bioengineering","BIOC":"Biochemistry And Molecular Biology","BINF":"Bioinformatics","BIOL":"Biology","BMEC":"Business Management Economics","CHEM":"Chemistry","CLST":"Classical Studies","CMMU":"Community Studies","CMPE":"Computer Engineering","CMPS":"Computer Science","CMPG":"Computer Science: Computer Game Design","COGS":"Cognitive Science","CRES":"Critical Race And Ethnic Studies","EART":"Earth Sciences","ECEV":"Ecology And Evolution","ECON":"Economics","EE":"Electrical Engineering","ENVS":"Environmental Studies","FMST":"Feminist Studies","FIDM":"Film And Digital Media","GMST":"German Studies","GLEC":"Global Economics","HBIO":"Human Biology","HIS":"History"," HAVC":"History Of Art And Visual Culture","ITST":"Italian Studies","JWST":"Jewish Studies","LANG":"Language Studies","LALS":"Latin American And Latino Studies","LGST":"Legal Studies","LING":"Linguistics","LIT":"Literature","MABI":"Marine Biology","MATH":"Mathematics","MCDB":"Molecular, Cell, And Developmental Biology","MUSC":"Music","NDT":"Network And Digital Technology","NBIO":"Neuroscience","PHIL":"Philosophy","PHYE":"Physics Education","PHYS":"Physics","ASPH":"Physics (astrophysics)","PLNT":"Plant Sciences","POLI":"Politics","PSYC":"Psychology","ROBO":"Robotics Engineering","SOCI":"Sociology","SPST":"Spanish Studies","TIM":"Technology And Information Management","THEA":"Theater Arts","INCL":"College Eight","INNI":"College Nine","INTE":"College Ten","INCW":"Cowell","INCR":"Crown","INKR":"Kresge","INMR":"Merrill","INOA":"Oakes","INPR":"Porter","INST":"Stevenson","PRFM":"Pre-film And Digital Media","XESA":"Earth Sciences/anthropology","XEBI":"Environmental Studies/biology","XEEA":"Environmental Studies/earth Sciences","XEEC":"Environmental Studies/economics","XEMA":"Economics/mathematics","XLPT":"Latin American And Latino Studies/politics","XLSY":"Latin American And Latino Studies/sociology"}
 
 try {
   const info = JSON.parse(fs.readFileSync('./classdata.json'));
@@ -99,14 +101,48 @@ function createClassStrings() {
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
-  client.channels.find('id', config.get('selectorChannel')).fetchMessages()
-    .then(() => console.log('Got selectorChannel messages!'))
+  client.channels.find('id', config.get('selectorChannel')).fetchMessages({ limit: 100 })
+    .then(messages => {
+      console.log('Got selectorChannel messages!');
+      messages.filter(m => m.author.id != client.user.id).forEach(m => m.delete());
+    })
     .catch(e => console.log('Error getting selectorChannel messages', e));
+
+  const guild = client.channels.find('id', config.get('selectorChannel')).guild;
+  Object.values(MAJORS).forEach(major => {
+    const guild = client.guilds.first();
+    if (!guild.roles.find('name', major)) {
+      guild.createRole({
+        name: major
+      }).then(role => console.log(`Created ${role.name} major role.`));
+    }
+  });
 });
 
 client.on('message', msg => {
   console.log(msg.author+': '+msg.content);
-  if (msg.content.indexOf('!class') == 0) {
+  if (msg.author.id == client.user.id) return;
+  if (msg.content == '!majors' && msg.member.roles.find('name', config.get('adminRoleName'))) {
+    let str = 'In order to assign yourself a major role, type your major code below (e.g. `cmps`). Major codes can be found at:\n';
+    str += 'https://registrar.ucsc.edu/navigator/section3/declaring/majors-list.html\n';
+    str += 'To remove a major, begin your message with "rm" (e.g. `rm cmps`)';
+    msg.channel.send(str);
+  } else if (msg.channel.id == config.get('selectorChannel')) {
+    const major = MAJORS[msg.content.replace('rm ', '').toUpperCase()];
+    if (!major && !msg.member.roles.find('name', config.get('adminRoleName'))) {
+      msg.delete();
+      msg.author.send(`"${msg.content.replace('rm ', '')}" is not a valid major!`);
+    } else if (major) {
+      msg.delete();
+      if (msg.content.startsWith('rm')) {
+        msg.member.removeRole(msg.guild.roles.find('name', major));
+        msg.author(`Successfully removed "${major}"`);
+      } else {
+        msg.member.addRole(msg.guild.roles.find('name', major));
+        msg.author(`Successfully added "${major}"`);
+      }
+    }
+  } else if (msg.content.indexOf('!class') == 0) {
     const match = msg.content.match(/!class (.+)/);
     if (!match) return msg.reply(`Invalid usage! Try \`!class <class name or number>\` (e.g. \`!class ams 3\`)`)
     const classData = classes[match[1]] || classes[classStrings[match[1].toLowerCase()]];
@@ -131,7 +167,7 @@ client.on('message', msg => {
         const emote = msg.guild.emojis.find('name', emoji) || EMOJI_MAPPING[emoji] || emojiLib.get(emoji);
         setTimeout(() => msgObj.react(emote), index*500);
       });
-      if (!match[2] || !msg.member.roles.find('id', config.get('adminRoleId'))) setTimeout(() => msgObj.react('🗑'), Object.keys(config.get('emojis')[selectorType]).length*500);
+      if (!match[2] || !msg.member.roles.find('name', config.get('adminRoleName'))) setTimeout(() => msgObj.react('🗑'), Object.keys(config.get('emojis')[selectorType]).length*500);
     }).catch(err => {
       console.log('Error sending message', err);
     });
