@@ -136,10 +136,10 @@ client.on('message', msg => {
       msg.delete();
       if (msg.content.startsWith('rm')) {
         msg.member.removeRole(msg.guild.roles.find('name', major));
-        msg.author(`Successfully removed "${major}"`);
+        msg.author.send(`Successfully removed "${major}"`);
       } else {
         msg.member.addRole(msg.guild.roles.find('name', major));
-        msg.author(`Successfully added "${major}"`);
+        msg.author.send(`Successfully added "${major}"`);
       }
     }
   } else if (msg.content.indexOf('!class') == 0) {
