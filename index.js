@@ -119,9 +119,22 @@ client.on('ready', () => {
   });
 });
 
+const repeatMessage = {};
+
 client.on('message', msg => {
   console.log(msg.author+': '+msg.content);
   if (msg.author.id == client.user.id) return;
+
+  if (!repeatMessage[msg.channel.name]) repeatMessage[msg.channel.name] = {msg: '', count: 0};
+
+  if (msg.content != repeatMessage[msg.channel.name].msg) {
+    repeatMessage[msg.channel.name] = {msg: msg.content, count: 1}
+  } else {
+    if (++repeatMessage[msg.channel.name].count == 3) {
+      msg.channel.send(msg.content);
+    }
+  }
+
   if (msg.content == '!majors' && msg.member.roles.find('name', config.get('adminRoleName'))) {
     let str = 'In order to assign yourself a major role, type your major code below (e.g. `cmps`). Major codes can be found at:\n';
     str += 'https://registrar.ucsc.edu/navigator/section3/declaring/majors-list.html\n';
