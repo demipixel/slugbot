@@ -235,7 +235,11 @@ client.on('messageReactionAdd', (reactionObj, user) => {
       setTimeout(() => reactionObj.remove(user), 200);
       // Remove roles relating to message
       member.removeRoles(member.roles.filterArray(role => allRoles.includes(role.name)));
-      setTimeout(() => member.addRole(reactionObj.message.guild.roles.find('name', roleName)), 100);
+      setTimeout(() => {
+        member.addRole(reactionObj.message.guild.roles.find('name', roleName))
+              .then(() => user.send('Successfully added role '+roleName))
+              .catch(err => user.send('Failed to add role '+roleName) && console.log(err));
+      }, 100);
     }).catch(err => {
       console.log(err);
       user.send('There was an error getting your member object! Could not change roles.');
