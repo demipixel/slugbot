@@ -235,8 +235,9 @@ client.on('messageReactionAdd', (reactionObj, user) => {
       setTimeout(() => reactionObj.remove(user), 200);
       // Remove roles relating to message
       member.removeRoles(member.roles.filterArray(role => allRoles.includes(role.name)));
+      const roleToAdd = reactionObj.message.guild.roles.find('name', roleName);
       setTimeout(() => {
-        member.addRole(reactionObj.message.guild.roles.find('name', roleName))
+        member.addRole(roleToAdd)
               .then(() => user.send('Successfully added role '+roleName))
               .catch(err => user.send('Failed to add role '+roleName) && console.log(err));
       }, 100);
