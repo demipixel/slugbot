@@ -11,9 +11,9 @@ const fs = require('fs');
 
 function fetchTerm(term, cb) {
   const classes = {};
-  request.post('https://pisa.ucsc.edu/class_search/index.php', {form: {action: 'results', 'binds[:term]': term, rec_dur: 50000} }, (err, http, body) => {
+  request.post('https://pisa.ucsc.edu/cs9/prd/sr9_2013/index.php', {form: {action: 'results', 'binds[:term]': term, rec_dur: 50000} }, (err, http, body) => {
     const classNumbers = [];
-    const re = /id="class_title_(\d+)/g;
+    const re = /id="class_id_(\d+)/g;
     let m;
 
     do {
