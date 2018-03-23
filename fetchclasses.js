@@ -72,11 +72,11 @@ function parseClass(classBody) {
   } while (m);
 
   // Fix information in <dt> and <dd>
-  classData.status = (classData.status.match(/alt="(.+?)"/) || ['', 'unknown'])[1];
-  classData.credits = parseInt((classData.credits.match(/\d+/) || [-1])[0]);
+  classData.status = classData.status ? (classData.status.match(/alt="(.+?)"/) || ['', 'Unknown'])[1] : 'Unknown';
+  classData.credits = classData.credits ? parseInt((classData.credits.match(/\d+/) || [-1])[0]) : 'Unknown';
 
   // Get name
-  classData.fullName = classBody.match(/<h2 style="margin:0px;">([^]+?)<\/h2>/)[1].trim().replace(/ +/g, ' ');
+  classData.fullName = classBody.match(/<h2 style="margin:0px;">([^]+?)<\/h2>/)[1].trim().replace(/ +/g, ' ') || 'Unknown';
   classData.name = classData.fullName.split('-')[0];
 
   // Get other information from larger sections
