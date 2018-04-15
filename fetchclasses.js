@@ -76,7 +76,8 @@ function parseClass(classBody) {
   classData.credits = classData.credits ? parseInt((classData.credits.match(/\d+/) || [-1])[0]) : 'Unknown';
 
   // Get name
-  classData.fullName = classBody.match(/<h2 style="margin:0px;">([^]+?)<\/h2>/)[1].trim().replace(/ +/g, ' ') || 'Unknown';
+  classData.fullName = classBody.match(/<h2 style="margin:0px;">([^]+?)<\/h2>/);
+  clsasData.fullName = classData.fullName ? classData.fullName[1].trim().replace(/ +/g, ' ') || 'Unknown' : 'Cannot Find';
   classData.name = classData.fullName.split('-')[0];
 
   // Get other information from larger sections

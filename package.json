@@ -10,9 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "cleverbot-node": "^0.3.11",
-    "config": "^1.26.1",
-    "discord.js": "^11.2.1",
+    "config": "^1.30.0",
+    "discord.js": "^11.3.2",
     "node-emoji": "^1.8.1",
-    "request": "^2.81.0"
+    "request": "^2.85.0"
   }
 }
