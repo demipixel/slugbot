@@ -11,14 +11,15 @@ const fs = require('fs');
 
 function fetchTerm(term, cb) {
   const classes = {};
-  request.post('https://pisa.ucsc.edu/cs9/prd/sr9_2013/index.php', {form: {action: 'results', 'binds[:term]': term, rec_dur: 50000} }, (err, http, body) => {
+  request.post('https://pisa.ucsc.edu/cs9/prd/sr9_2013/index.php', { form: { action: 'results', 'binds[:term]': term, rec_dur: 50000 } }, (err, http,
+    body) => {
     const classNumbers = [];
     const re = /id="class_id_(\d+)/g;
     let m;
 
     do {
       m = re.exec(body);
-      if (m && classNumbers[classNumbers.length-1] != m[1]) classNumbers.push(m[1].replace(/&amp;/g, '&'));
+      if (m && classNumbers[classNumbers.length - 1] != m[1]) classNumbers.push(m[1].replace(/&amp;/g, '&'));
     } while (m);
 
     fetchClasses(term, classNumbers, classes, cb);
@@ -43,15 +44,16 @@ function fetchClasses(term, classNumbers, classes, cb) {
   let nextToFetch = 20;
 
   const fetch = (number) => {
-    request.post('https://pisa.ucsc.edu/class_search/', {form: {action: 'detail', 'class_data[:STRM]': term, 'class_data[:CLASS_NBR]': number}}, (err, http, body) => {
-      if (err) console.log('Error fetching classes', err);
-      else {
-        const classData = parseClass(body);
-        classes[classData.classNumber] = classData;
-      }
+    request.post('https://pisa.ucsc.edu/class_search/', { form: { action: 'detail', 'class_data[:STRM]': term, 'class_data[:CLASS_NBR]': number } },
+      (err, http, body) => {
+        if (err) console.log('Error fetching classes', err);
+        else {
+          const classData = parseClass(body);
+          classes[classData.classNumber] = classData;
+        }
 
-      done();
-    });
+        done();
+      });
   };
 
   classNumbers.slice(0, nextToFetch).forEach(number => {
@@ -77,7 +79,7 @@ function parseClass(classBody) {
 
   // Get name
   classData.fullName = classBody.match(/<h2 style="margin:0px;">([^]+?)<\/h2>/);
-  clsasData.fullName = classData.fullName ? classData.fullName[1].trim().replace(/ +/g, ' ') || 'Unknown' : 'Cannot Find';
+  classData.fullName = classData.fullName ? classData.fullName[1].trim().replace(/ +/g, ' ') || 'Unknown' : 'Cannot Find';
   classData.name = classData.fullName.split('-')[0];
 
   // Get other information from larger sections
