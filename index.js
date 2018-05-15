@@ -6,7 +6,7 @@ const fetchclasses = require('./fetchclasses');
 const CleverBot = require('cleverbot-node');
 
 const clever = new CleverBot();
-clever.configure({botapi: config.get('cleverbotApiKey')})
+clever.configure({ botapi: config.get('cleverbotApiKey') })
 try {
   CleverBot.prepare(function() {
     console.log('CleverBot is online');
@@ -14,6 +14,12 @@ try {
 } catch (err) {
   console.log('Cannot put CleverBot online!');
 }
+
+if (!fs.existsSync('./gold.json')) {
+  fs.writeFileSync('./gold.json', '{}');
+}
+
+const goldData = JSON.parse(fs.readFileSync('./gold.json'));
 
 const client = new Discord.Client();
 
@@ -61,7 +67,7 @@ const EMOJI_MAPPING = {
   keycap_ten: '🔟'
 };
 
-const MAJORS = {"UND":"Undeclared","UNON":"Non Degree","ANTH":"Anthropology","APPH":"Applied Physics","ART":"Art","ARTG":"Art And Design: Games And Playable Media","ARTH":"See History Of Art And Visual Culture","BENG":"Bioengineering","BIOC":"Biochemistry And Molecular Biology","BINF":"Bioinformatics","BIOL":"Biology","BMEC":"Business Management Economics","CHEM":"Chemistry","CLST":"Classical Studies","CMMU":"Community Studies","CMPE":"Computer Engineering","CMPS":"Computer Science","CMPG":"Computer Science: Computer Game Design","COGS":"Cognitive Science","CRES":"Critical Race And Ethnic Studies","EART":"Earth Sciences","ECEV":"Ecology And Evolution","ECON":"Economics","EE":"Electrical Engineering","ENVS":"Environmental Studies","FMST":"Feminist Studies","FIDM":"Film And Digital Media","GMST":"German Studies","GLEC":"Global Economics","HBIO":"Human Biology","HIS":"History"," HAVC":"History Of Art And Visual Culture","ITST":"Italian Studies","JWST":"Jewish Studies","LANG":"Language Studies","LALS":"Latin American And Latino Studies","LGST":"Legal Studies","LING":"Linguistics","LIT":"Literature","MABI":"Marine Biology","MATH":"Mathematics","MCDB":"Molecular, Cell, And Developmental Biology","MUSC":"Music","NDT":"Network And Digital Technology","NBIO":"Neuroscience","PHIL":"Philosophy","PHYE":"Physics Education","PHYS":"Physics","ASPH":"Physics (astrophysics)","PLNT":"Plant Sciences","POLI":"Politics","PSYC":"Psychology","ROBO":"Robotics Engineering","SOCI":"Sociology","SPST":"Spanish Studies","TIM":"Technology And Information Management","THEA":"Theater Arts","PRFM":"Pre-film And Digital Media","XESA":"Earth Sciences/anthropology","XEBI":"Environmental Studies/biology","XEEA":"Environmental Studies/earth Sciences","XEEC":"Environmental Studies/economics","XEMA":"Economics/mathematics","XLPT":"Latin American And Latino Studies/politics","XLSY":"Latin American And Latino Studies/sociology"}
+const MAJORS = { "UND": "Undeclared", "UNON": "Non Degree", "ANTH": "Anthropology", "APPH": "Applied Physics", "ART": "Art", "ARTG": "Art And Design: Games And Playable Media", "ARTH": "See History Of Art And Visual Culture", "BENG": "Bioengineering", "BIOC": "Biochemistry And Molecular Biology", "BINF": "Bioinformatics", "BIOL": "Biology", "BMEC": "Business Management Economics", "CHEM": "Chemistry", "CLST": "Classical Studies", "CMMU": "Community Studies", "CMPE": "Computer Engineering", "CMPS": "Computer Science", "CMPG": "Computer Science: Computer Game Design", "COGS": "Cognitive Science", "CRES": "Critical Race And Ethnic Studies", "EART": "Earth Sciences", "ECEV": "Ecology And Evolution", "ECON": "Economics", "EE": "Electrical Engineering", "ENVS": "Environmental Studies", "FMST": "Feminist Studies", "FIDM": "Film And Digital Media", "GMST": "German Studies", "GLEC": "Global Economics", "HBIO": "Human Biology", "HIS": "History", " HAVC": "History Of Art And Visual Culture", "ITST": "Italian Studies", "JWST": "Jewish Studies", "LANG": "Language Studies", "LALS": "Latin American And Latino Studies", "LGST": "Legal Studies", "LING": "Linguistics", "LIT": "Literature", "MABI": "Marine Biology", "MATH": "Mathematics", "MCDB": "Molecular, Cell, And Developmental Biology", "MUSC": "Music", "NDT": "Network And Digital Technology", "NBIO": "Neuroscience", "PHIL": "Philosophy", "PHYE": "Physics Education", "PHYS": "Physics", "ASPH": "Physics (astrophysics)", "PLNT": "Plant Sciences", "POLI": "Politics", "PSYC": "Psychology", "ROBO": "Robotics Engineering", "SOCI": "Sociology", "SPST": "Spanish Studies", "TIM": "Technology And Information Management", "THEA": "Theater Arts", "PRFM": "Pre-film And Digital Media", "XESA": "Earth Sciences/anthropology", "XEBI": "Environmental Studies/biology", "XEEA": "Environmental Studies/earth Sciences", "XEEC": "Environmental Studies/economics", "XEMA": "Economics/mathematics", "XLPT": "Latin American And Latino Studies/politics", "XLSY": "Latin American And Latino Studies/sociology" }
 
 try {
   const info = JSON.parse(fs.readFileSync('./classdata.json'));
@@ -79,8 +85,8 @@ setTimeout(() => {
   fetchclasses(config.get('classSearch.term'), gotClasses);
   setInterval(() => {
     fetchclasses(config.get('classSearch.term'), gotClasses);
-  }, config.get('classSearch.interval')*1000);
-}, Math.max(config.get('classSearch.interval')*1000 - (Date.now() - lastUpdated), 0));
+  }, config.get('classSearch.interval') * 1000);
+}, Math.max(config.get('classSearch.interval') * 1000 - (Date.now() - lastUpdated), 0));
 
 function createClassStrings() {
   classStrings = {};
@@ -93,17 +99,19 @@ function createClassStrings() {
     classStrings[nameArr.join(' ').toLowerCase().replace(' -', '')] = classId;
 
     if (parseInt(nameArr[3]) < 10) {
-      classStrings[classData.name.toLowerCase()+' - '+nameArr[3].slice(1)] = classId;
-      classStrings[classData.name.toLowerCase()+' '+nameArr[3].slice(1)] = classId;
+      classStrings[classData.name.toLowerCase() + ' - ' + nameArr[3].slice(1)] = classId;
+      classStrings[classData.name.toLowerCase() + ' ' + nameArr[3].slice(1)] = classId;
     }
   });
 }
 
+let selectorMessages = null;
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
   client.channels.find('id', config.get('selectorChannel')).fetchMessages({ limit: 100 })
     .then(messages => {
       console.log('Got selectorChannel messages!');
+      selectorMessages = messages;
       messages.filter(m => m.author.id != client.user.id).forEach(m => m.delete());
     })
     .catch(e => console.log('Error getting selectorChannel messages', e));
@@ -122,13 +130,14 @@ client.on('ready', () => {
 const repeatMessage = {};
 
 client.on('message', msg => {
-  console.log(msg.author+': '+msg.content);
+  console.log(msg.author + ': ' + msg.content);
   if (msg.author.id == client.user.id) return;
+  else if (!msg.member) return;
 
-  if (!repeatMessage[msg.channel.name]) repeatMessage[msg.channel.name] = {msg: '', count: 0};
+  if (!repeatMessage[msg.channel.name]) repeatMessage[msg.channel.name] = { msg: '', count: 0 };
 
   if (msg.content != repeatMessage[msg.channel.name].msg) {
-    repeatMessage[msg.channel.name] = {msg: msg.content, count: 1}
+    repeatMessage[msg.channel.name] = { msg: msg.content, count: 1 }
   } else {
     if (++repeatMessage[msg.channel.name].count == 3) {
       msg.channel.send(msg.content);
@@ -160,10 +169,10 @@ client.on('message', msg => {
     if (!match) return msg.reply(`Invalid usage! Try \`!class <class name or number>\` (e.g. \`!class ams 3\`)`)
     const classData = classes[match[1]] || classes[classStrings[match[1].toLowerCase()]];
     if (!classData) msg.reply(`Could not find that class!`);
-    else msg.channel.send('', {embed: getClassEmbed(classData)});
+    else msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content[0] == '!' && (classes[msg.content.slice(1)] || classes[classStrings[msg.content.slice(1).toLowerCase()]])) {
     const classData = classes[msg.content.slice(1)] || classes[classStrings[msg.content.slice(1).toLowerCase()]];
-    msg.channel.send('', {embed: getClassEmbed(classData)});
+    msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content == '!github') {
     msg.reply('https://github.com/demipixel/slugbot');
   } else if (msg.content.indexOf('!selector') == 0) {
@@ -171,16 +180,17 @@ client.on('message', msg => {
     if (!match) return msg.reply('Invalid usage! Try `!selector <name of selector>`');
     const selectorType = match[1];
     if (!config.get('emojis')[selectorType]) return msg.reply('Invalid selector type!');
-    let message = config.get('messages.emojiSelectors')[selectorType]+'\n';
+    let message = config.get('messages.emojiSelectors')[selectorType] + '\n';
     message += Object.keys(config.get('emojis')[selectorType]).map(emoji => {
-      return (msg.guild.emojis.find('name', emoji) || ':'+emoji+':')+' '+config.get('emojis')[selectorType][emoji];
+      return (msg.guild.emojis.find('name', emoji) || ':' + emoji + ':') + ' ' + config.get('emojis')[selectorType][emoji];
     }).join('\n');
     msg.channel.send(message).then(msgObj => {
       Object.keys(config.get('emojis')[selectorType]).forEach((emoji, index) => {
         const emote = msg.guild.emojis.find('name', emoji) || EMOJI_MAPPING[emoji] || emojiLib.get(emoji);
-        setTimeout(() => msgObj.react(emote), index*500);
+        setTimeout(() => msgObj.react(emote), index * 500);
       });
-      if (!match[2] || !msg.member.roles.find('name', config.get('adminRoleName'))) setTimeout(() => msgObj.react('🗑'), Object.keys(config.get('emojis')[selectorType]).length*500);
+      if (!match[2] || !msg.member.roles.find('name', config.get('adminRoleName'))) setTimeout(() => msgObj.react('🗑'), Object.keys(config.get(
+        'emojis')[selectorType]).length * 500);
     }).catch(err => {
       console.log('Error sending message', err);
     });
@@ -188,8 +198,7 @@ client.on('message', msg => {
     clever.write(msg.content.replace(client.user.toString(), '').trim(), (resp) => {
       if (!resp || resp.error) {
         msg.reply('I don\'t know how to respond...');
-      }
-      else msg.reply(resp.message.replace(/\*/g, '\\*'));
+      } else msg.reply(resp.message.replace(/\*/g, '\\*'));
     });
   }
 });
@@ -201,23 +210,24 @@ function getClassEmbed(classData) {
     color: '16040514', // #f4c242
     description: classData.description,
     fields: [
-      {name: 'Status', value: classData.status[0].toUpperCase() + classData.status.slice(1), inline: true},
-      {name: 'Credits', value: classData.credits+' units', inline: true},
-      {name: 'Career', value: classData.career[0].toUpperCase() + classData.career.slice(1), inline: true},
-      {name: 'Gen Ed', value: classData.generalEducation.toUpperCase() || 'None', inline: true},
-      {name: 'Enrollment', value: classData.enrolled+'/'+classData.enrollmentCapacity, inline: true},
-      {name: 'Wait List', value: classData.waitListTotal+'/'+classData.waitListCapacity, inline: true},
-      {name: 'Instructor', value: classData.meeting.instructor, inline:true},
-      {name: 'Time', value: classData.meeting.time, inline: true},
-      {name: 'Location', value: classData.meeting.room, inline: true},
-      {name: 'Requirements', value: classData.requirements || 'None'},
-      {name: 'Notes', value: classData.notes || 'None'}
+      { name: 'Status', value: classData.status[0].toUpperCase() + classData.status.slice(1), inline: true },
+      { name: 'Credits', value: classData.credits + ' units', inline: true },
+      { name: 'Career', value: classData.career[0].toUpperCase() + classData.career.slice(1), inline: true },
+      { name: 'Gen Ed', value: classData.generalEducation.toUpperCase() || 'None', inline: true },
+      { name: 'Enrollment', value: classData.enrolled + '/' + classData.enrollmentCapacity, inline: true },
+      { name: 'Wait List', value: classData.waitListTotal + '/' + classData.waitListCapacity, inline: true },
+      { name: 'Instructor', value: classData.meeting.instructor, inline: true },
+      { name: 'Time', value: classData.meeting.time, inline: true },
+      { name: 'Location', value: classData.meeting.room, inline: true },
+      { name: 'Requirements', value: classData.requirements || 'None' },
+      { name: 'Notes', value: classData.notes || 'None' }
     ],
     footer: { text: 'Information from http://pisa.ucsc.edu/class_search/' }
   }
 }
 
 client.on('messageReactionAdd', (reactionObj, user) => {
+  console.log('Eh??', reactionObj);
   if (!reactionObj.message.guild) return;
   if (user == client.user) return;
 
@@ -226,7 +236,9 @@ client.on('messageReactionAdd', (reactionObj, user) => {
     return;
   }
 
-  const {roleName, type} = getRoleFromReaction(reactionObj);
+  console.log(reactionObj);
+
+  const { roleName, type } = getRoleFromReaction(reactionObj);
   const emojiToRole = config.get('emojis')[type];
 
   if (roleName) {
@@ -238,8 +250,8 @@ client.on('messageReactionAdd', (reactionObj, user) => {
       const roleToAdd = reactionObj.message.guild.roles.find('name', roleName);
       setTimeout(() => {
         member.addRole(roleToAdd)
-              .then(() => user.send('Successfully added role '+roleName))
-              .catch(err => user.send('Failed to add role '+roleName) && console.log(err));
+          .then(() => user.send('Successfully added role ' + roleName))
+          .catch(err => user.send('Failed to add role ' + roleName) && console.log(err));
       }, 100);
     }).catch(err => {
       console.log(err);
@@ -249,10 +261,9 @@ client.on('messageReactionAdd', (reactionObj, user) => {
 });
 
 client.on('messageReactionRemove', (reactionObj, user) => {
-  return; // Not used ATM
   if (!reactionObj.message.guild) return;
   if (user == client.user) return;
-  const {roleName, type} = getRoleFromReaction(reactionObj);
+  /*const {roleName, type} = getRoleFromReaction(reactionObj);
   const emojiToRole = config.get('emojis')[type];
 
   if (roleName) {
@@ -262,7 +273,7 @@ client.on('messageReactionRemove', (reactionObj, user) => {
       console.log(err);
       user.send('There was an error getting your member object! Could not change roles.');
     });
-  }
+  }*/
 });
 
 function getRoleFromReaction(reactionObj) {
@@ -278,7 +289,7 @@ function getRoleFromReaction(reactionObj) {
     }
   }
 
-  return {role: null, type: null};
+  return { role: null, type: null };
 }
 
 function emojiNameToSymbol(str) {
