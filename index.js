@@ -145,10 +145,10 @@ client.on('message', msg => {
     }
   }
 
-  if (msg.content.includes(':thinking:') || msg.content.includes('🤔')) {
+  /*if (msg.content.includes(':thinking:') || msg.content.includes('🤔')) {
     msg.delete();
     return;
-  }
+  }*/
 
   if (msg.content == '!majors' && msg.member.roles.find('name', config.get('adminRoleName'))) {
     let str = 'In order to assign yourself a major role, type your major code below (e.g. `cmps`). Major codes can be found at:\n';
