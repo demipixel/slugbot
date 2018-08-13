@@ -142,6 +142,7 @@ client.on('message', msg => {
     repeatMessage[msg.channel.name].users.add(msg.member.user.id);
     if (repeatMessage[msg.channel.name].users.size == 3) {
       msg.channel.send(msg.content);
+      repeatMessage[msg.channel.name] = null;
     }
   }
 
