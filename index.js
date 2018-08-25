@@ -156,7 +156,7 @@ client.on('message', msg => {
     str += 'https://registrar.ucsc.edu/navigator/section3/declaring/majors-list.html\n';
     str += 'To remove a major, begin your message with "rm" (e.g. `rm cmps`)';
     msg.channel.send(str);
-  } else if (msg.channel.id == config.get('selectorChannel')) {
+  } else if (msg.channel.id == config.get('selectorChannel') && !msg.member.roles.find('name', config.get('adminRoleName'))) {
     const major = MAJORS[msg.content.replace('rm ', '').toUpperCase()];
     if (!major && !msg.member.roles.find('name', config.get('adminRoleName'))) {
       msg.delete();
