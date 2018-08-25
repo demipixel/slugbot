@@ -162,7 +162,7 @@ client.on('message', msg => {
       msg.delete();
       msg.author.send(`"${msg.content.replace('rm ', '')}" is not a valid major!`);
     } else if (major) {
-      msg.delete();
+      setTimeout(() => msg.delete(), 500);
       if (msg.content.startsWith('rm')) {
         msg.member.removeRole(msg.guild.roles.find('name', major));
         msg.author.send(`Successfully removed "${major}"`);
