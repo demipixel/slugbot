@@ -15,7 +15,6 @@ let highestCounter = null;
 const LAST_FIVE_MESSAGES = [];
 let lastFiveIndex = 0;
 
-let lastLastMember = null;
 let lastMessageTimeout = null;
 
 module.exports = {
@@ -122,14 +121,14 @@ module.exports = {
     
     if (lastMessageTimeout) clearTimeout(lastMessageTimeout);
     lastMessageTimeout = setTimeout(() => {
-      if (lastLastMember == lastMember && lastMember && !lastMember.roles.find('name', LAST_COUNTER_ROLE.name)) {
+      if (lastMember && !lastMember.roles.find('name', LAST_COUNTER_ROLE.name)) {
         LAST_COUNTER_ROLE.members.array().forEach(member => {
           member.removeRole(LAST_COUNTER_ROLE);
         });
         lastMember.addRole(LAST_COUNTER_ROLE);
       }
 
-      lastLastMember = lastMember;
+      lastMessageTimeout = null;
     }, 15*1000);
   }
 }
