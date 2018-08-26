@@ -63,6 +63,9 @@ module.exports = {
       if (!newNumberMatch || !numberMatch || newNumberMatch[1] != numberMatch[1]) {
         mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
+      } else if (newMsg.content.length > 50) {
+        mute(newMsg, 'You edited your message to be over 50 characters!');
+        if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
       }
     });
   },
