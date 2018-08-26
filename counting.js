@@ -139,7 +139,7 @@ function updateNumber(num, member, msg) {
   lastNumber = parseInt(num);
   lastMember = member;
   if (lastNumber % 100 == 0) {
-    msg.channel.setName('counting-'+((lastNumber/1000).toFixed(1))+'k');
+    msg.channel.setName('counting-'+lastNumber);
   }
 }
 
