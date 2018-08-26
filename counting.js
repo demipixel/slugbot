@@ -44,6 +44,8 @@ module.exports = {
 
     // Prevent users from editing messages (fix if needed)
     client.on('messageUpdate', (oldMsg, newMsg) => {
+      if (!msg.channel.name.startsWith('counting')) return;
+      
       mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
       if (parseInt(oldMsg.content) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
     });
