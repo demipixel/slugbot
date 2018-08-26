@@ -61,7 +61,7 @@ module.exports = {
       msg.channel.send(highestCounter.user.username);
       return;
     } else if (msg.content == '!counter') {
-      msg.delete();
+      mute(msg);
       msg.channel.send(`Last number: ${lastNumber} from ${lastUser || 'an admin (forced)'}`).then(cmdMsg => {
         setTimeout(() => cmdMsg.delete(), 3000);
       });
