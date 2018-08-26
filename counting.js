@@ -88,7 +88,7 @@ module.exports = {
     }
 
     if (!msg.content.match(/[1-9]\d*/)) {
-      mute(msg, 'That is not a valid number! You have been muted for 1 minute.', 60*1000);
+      mute(msg, 'That is not a valid number! You have been muted for 10 seconds.', 10*1000);
       return;
     }
 
@@ -98,12 +98,12 @@ module.exports = {
     }
 
     if (lastMember == msg.member) {
-      mute(msg, `You cannot say a number twice in a row. You have been muted for 30 seconds.`, 30*1000);
+      mute(msg, `You cannot say a number twice in a row. You have been muted for 10 seconds.`, 10*1000);
       return;
     }
 
     // Update number
-    updateNumber(lastNumber + 1, msg.member, msg);
+    updateNumber(lastNumber ? lastNumber + 1 : parseInt(msg.content), msg.member, msg);
 
     // Increase counter for user
     if (!TOTAL_COUNTS[msg.member.user.id]) TOTAL_COUNTS[msg.member.user.id] = 0;
