@@ -57,10 +57,13 @@ module.exports = {
     client.on('messageUpdate', (oldMsg, newMsg) => {
       if (!newMsg.channel.name.startsWith('counting')) return;
 
-      mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
-
       const numberMatch = oldMsg.content.match(/^([1-9]\d*)/);
-      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
+      const newNumberMatch = oldMsg.content.match(/^([1-9]\d*)/);
+
+      if (!newNumberMatch || !numberMatch || newNumberMatch[1] != numberMatch[1]) {
+        mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
+        if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
+      }
     });
   },
   message: function(client, msg) {
