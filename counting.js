@@ -63,7 +63,7 @@ module.exports = {
 
     let lastLastMember = null;
     setInterval(() => {
-      if (lastLastMember == lastMember && lastMember && !lastMember.roles.has(LAST_COUNTER_ROLE)) {
+      if (lastLastMember == lastMember && lastMember && !lastMember.roles.find('name', LAST_COUNTER_ROLE.name)) {
         LAST_COUNTER_ROLE.members.array().forEach(member => {
           member.removeRole(LAST_COUNTER_ROLE);
         });
