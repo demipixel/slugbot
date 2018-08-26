@@ -59,7 +59,7 @@ module.exports = {
       if (!newMsg.channel.name.startsWith('counting')) return;
 
       const numberMatch = oldMsg.content.match(/^([1-9]\d*)/);
-      const newNumberMatch = oldMsg.content.match(/^([1-9]\d*)/);
+      const newNumberMatch = newMsg.content.match(/^([1-9]\d*)/);
 
       if (!newNumberMatch || !numberMatch || newNumberMatch[1] != numberMatch[1]) {
         reactDeleteMute(newMsg, 5000, ['🔢', '❓', '🚫']);
