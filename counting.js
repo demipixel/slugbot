@@ -2,6 +2,7 @@ const fs = require('fs');
 
 let COUNTING_MUTE_ROLE = null;
 let HIGHEST_COUNTER_ROLE = null;
+let LAST_COUNTER_ROLE = null;
 
 let lastNumber = null;
 let lastUser = null;
@@ -18,10 +19,15 @@ module.exports = {
   ready: function(client) {
     COUNTING_MUTE_ROLE = client.guilds.first().roles.find('name', 'Counting Mute');
     HIGHEST_COUNTER_ROLE = client.guilds.first().roles.find(r => r.name.startsWith('Highest Counter'));
+    LAST_COUNTER_ROLE = client.guilds.first().roles.find('name', 'Last Counter');
 
     // Remove anyone with mute role on startup
     COUNTING_MUTE_ROLE.members.array().forEach(member => {
       member.removeRole(COUNTING_MUTE_ROLE);
+    });
+
+    LAST_COUNTER_ROLE.members.array().forEach(member => {
+      member.removeRole(LAST_COUNTER_ROLE);
     });
 
     TOTAL_COUNTS = JSON.parse(fs.readFileSync(COUNTER_FILE, 'utf8'));
@@ -54,6 +60,18 @@ module.exports = {
       mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
       if (parseInt(oldMsg.content) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
     });
+
+    let lastLastUser = null;
+    setInterval(() => {
+      if (lastLastUser == lastUser && lastUser && !lastUser.roles.has(LAST_COUNTER_ROLE)) {
+        LAST_COUNTER_ROLE.members.array().forEach(member => {
+          member.removeRole(LAST_COUNTER_ROLE);
+        });
+        lastUser.addRole(LAST_COUNTER_ROLE);
+      }
+
+      lastLastUser = lastUser;
+    }, 10*1000);
   },
   message: function(client, msg) {
 
