@@ -49,18 +49,18 @@ module.exports = {
 
       const numberMatch = msg.content.match(/^([1-9]\d*)/);
 
-      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) msg.channel.sendMessage(msg.content);
+      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) msg.channel.sendMessage(numberMatch[1]);
       mute(msg, 'Do not delete your messages! You have been muted for 1 minute.', 60*1000);
     });
 
     // Prevent users from editing messages (fix if needed)
     client.on('messageUpdate', (oldMsg, newMsg) => {
-      if (!msg.channel.name.startsWith('counting')) return;
+      if (!newMsg.channel.name.startsWith('counting')) return;
 
       mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
 
       const numberMatch = oldMsg.content.match(/^([1-9]\d*)/);
-      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
+      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
     });
   },
   message: function(client, msg) {
