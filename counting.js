@@ -19,6 +19,11 @@ module.exports = {
     COUNTING_MUTE_ROLE = client.guilds.first().roles.find('name', 'Counting Mute');
     HIGHEST_COUNTER_ROLE = client.guilds.first().roles.find(r => r.name.startsWith('Highest Counter'));
 
+    // Remove anyone with mute role on startup
+    COUNTING_MUTE_ROLE.members.array().forEach(member => {
+      member.removeRole(COUNTING_MUTE_ROLE);
+    });
+
     TOTAL_COUNTS = JSON.parse(fs.readFileSync(COUNTER_FILE, 'utf8'));
     let highestId = null;
     Object.keys(TOTAL_COUNTS).forEach(userId => {
@@ -45,7 +50,7 @@ module.exports = {
     // Prevent users from editing messages (fix if needed)
     client.on('messageUpdate', (oldMsg, newMsg) => {
       if (!msg.channel.name.startsWith('counting')) return;
-      
+
       mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
       if (parseInt(oldMsg.content) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
     });
@@ -53,7 +58,12 @@ module.exports = {
   message: function(client, msg) {
 
     if (msg.content == '!highestcounter') {
-      msg.channel.say(highestCounter.user.username);
+      msg.channel.send(highestCounter.user.username);
+      return;
+    } else if (msg.content == '!counter') {
+      msg.channel.send(`Last number: ${lastNumber} from ${lastUser || 'an admin (forced)'}`).then(cmdMsg => {
+        setTimeout(() => cmdMsg.delete(), 3000);
+      });
       return;
     }
 

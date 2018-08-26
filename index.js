@@ -142,13 +142,15 @@ client.on('message', msg => {
 
   if (!repeatMessage[msg.channel.name]) repeatMessage[msg.channel.name] = { msg: '', users: [] };
 
-  if (msg.content != repeatMessage[msg.channel.name].msg) {
-    repeatMessage[msg.channel.name] = { msg: msg.content, users: new Set([msg.member.user.id]) }
-  } else {
-    repeatMessage[msg.channel.name].users.add(msg.member.user.id);
-    if (repeatMessage[msg.channel.name].users.size == 3) {
-      msg.channel.send(msg.content);
-      repeatMessage[msg.channel.name] = null;
+  if (!msg.channel.name.startsWith('counting')) {
+    if (msg.content != repeatMessage[msg.channel.name].msg) {
+      repeatMessage[msg.channel.name] = { msg: msg.content, users: new Set([msg.member.user.id]) }
+    } else {
+      repeatMessage[msg.channel.name].users.add(msg.member.user.id);
+      if (repeatMessage[msg.channel.name].users.size == 3) {
+        msg.channel.send(msg.content);
+        repeatMessage[msg.channel.name] = null;
+      }
     }
   }
 
@@ -244,7 +246,6 @@ function getClassEmbed(classData) {
 }
 
 client.on('messageReactionAdd', (reactionObj, user) => {
-  console.log('Eh??', reactionObj);
   if (!reactionObj.message.guild) return;
   if (user == client.user) return;
 
@@ -252,8 +253,6 @@ client.on('messageReactionAdd', (reactionObj, user) => {
     reactionObj.message.delete();
     return;
   }
-
-  console.log(reactionObj);
 
   const { roleName, type } = getRoleFromReaction(reactionObj);
   const emojiToRole = config.get('emojis')[type];
