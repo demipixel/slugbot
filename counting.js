@@ -51,7 +51,7 @@ module.exports = {
 
       if (numberMatch && parseInt(numberMatch[1]) == lastNumber) msg.channel.sendMessage(numberMatch[1]);
       reactDeleteMute(msg, 30*1000);
-      msg.member.user.send('Do not delete your messages! You have been muted for 30 seconds.');
+      msg.member.user.send('Do not delete your messages! You have been muted for 30 seconds.').catch(err => console.error(err));
     });
 
     // Prevent users from editing messages (fix if needed)
@@ -182,7 +182,7 @@ function reactDeleteMute(msg, length=0, emojis=[]) {
   }
 
   setTimeout(() => {
-    msg.delete();
+    msg.delete().catch(err => console.error(err));
   }, Math.max(500, emojis.length*1200));
 
   if (length) {
