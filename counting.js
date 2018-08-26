@@ -138,8 +138,8 @@ module.exports = {
 function updateNumber(num, member, msg) {
   lastNumber = parseInt(num);
   lastMember = member;
-  if (lastNumber % 1000 == 0) {
-    msg.channel.setName('counting-'+(Math.floor(lastNumber/1000))+'k');
+  if (lastNumber % 100 == 0) {
+    msg.channel.setName('counting-'+((lastNumber/1000).toFixed(1))+'k');
   }
 }
 
