@@ -47,7 +47,9 @@ module.exports = {
         if (LAST_FIVE_MESSAGES[i] && LAST_FIVE_MESSAGES[i].id == msg.id) return; // Deleted by bot
       }
 
-      if (parseInt(msg.content) == lastNumber) msg.channel.sendMessage(msg.content);
+      const numberMatch = msg.content.match(/^([1-9]\d*)/);
+
+      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) msg.channel.sendMessage(msg.content);
       mute(msg, 'Do not delete your messages! You have been muted for 1 minute.', 60*1000);
     });
 
@@ -56,7 +58,9 @@ module.exports = {
       if (!msg.channel.name.startsWith('counting')) return;
 
       mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
-      if (parseInt(oldMsg.content) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
+
+      const numberMatch = oldMsg.content.match(/^([1-9]\d*)/);
+      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
     });
   },
   message: function(client, msg) {
@@ -87,12 +91,17 @@ module.exports = {
       return;
     }
 
-    if (!msg.content.match(/[1-9]\d*/)) {
+    if (!msg.content.match(/^[1-9]\d*/)) {
       mute(msg, 'That is not a valid number! You have been muted for 10 seconds.', 10*1000);
+      return;
+    } else if (msg.content.length > 50) {
+      mute(msg, 'Messages can only be up to 50 characters! You have been muted for 10 seconds.', 10*1000);
       return;
     }
 
-    if (lastNumber !== null && msg.content != (lastNumber + 1).toString()) {
+    const number = msg.content.match(/^([1-9]\d*)/)[1];
+
+    if (lastNumber !== null && number != (lastNumber + 1).toString()) {
       mute(msg);
       return;
     }
@@ -103,7 +112,7 @@ module.exports = {
     }
 
     // Update number
-    updateNumber(lastNumber ? lastNumber + 1 : parseInt(msg.content), msg.member, msg);
+    updateNumber(lastNumber ? lastNumber + 1 : parseInt(number), msg.member, msg);
 
     // Increase counter for user
     if (!TOTAL_COUNTS[msg.member.user.id]) TOTAL_COUNTS[msg.member.user.id] = 0;
