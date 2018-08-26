@@ -15,6 +15,9 @@ let highestCounter = null;
 const LAST_FIVE_MESSAGES = [];
 let lastFiveIndex = 0;
 
+let lastLastMember = null;
+let lastMessageTimeout = null;
+
 module.exports = {
   ready: function(client) {
     COUNTING_MUTE_ROLE = client.guilds.first().roles.find('name', 'Counting Mute');
@@ -56,18 +59,6 @@ module.exports = {
       mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
       if (parseInt(oldMsg.content) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
     });
-
-    let lastLastMember = null;
-    setInterval(() => {
-      if (lastLastMember == lastMember && lastMember && !lastMember.roles.find('name', LAST_COUNTER_ROLE.name)) {
-        LAST_COUNTER_ROLE.members.array().forEach(member => {
-          member.removeRole(LAST_COUNTER_ROLE);
-        });
-        lastMember.addRole(LAST_COUNTER_ROLE);
-      }
-
-      lastLastMember = lastMember;
-    }, 10*1000);
   },
   message: function(client, msg) {
 
@@ -128,6 +119,18 @@ module.exports = {
     updateHighestCounterRole(); // Update role name if needed
 
     if (lastNumber % 5 === 0) saveFile(); // Save TOTAL_COUNTS every 5 messages
+    
+    if (lastMessageTimeout) clearTimeout(lastMessageTimeout);
+    lastMessageTimeout = setTimeout(() => {
+      if (lastLastMember == lastMember && lastMember && !lastMember.roles.find('name', LAST_COUNTER_ROLE.name)) {
+        LAST_COUNTER_ROLE.members.array().forEach(member => {
+          member.removeRole(LAST_COUNTER_ROLE);
+        });
+        lastMember.addRole(LAST_COUNTER_ROLE);
+      }
+
+      lastLastMember = lastMember;
+    }, 15*1000);
   }
 }
 
