@@ -64,8 +64,8 @@ module.exports = {
       if (!newNumberMatch || !numberMatch || newNumberMatch[1] != numberMatch[1]) {
         reactDeleteMute(newMsg, 5000, ['🔢', '❓', '🚫']);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
-      } else if (newMsg.content.length > 50) {
-        reactDeleteMute(newMsg, 5000, ['6️⃣', '0️⃣', '🚫']);
+      } else if (newMsg.content.length > 60) {
+        reactDeleteMute(newMsg, 5000, ['6⃣', '0⃣', '🚫']);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
       }
     });
@@ -101,8 +101,8 @@ module.exports = {
     if (!msg.content.match(/^[1-9]\d*/)) {
       reactDeleteMute(msg, 5000, ['🔢', '❓', '🚫']);
       return;
-    } else if (msg.content.length > 50) {
-      reactDeleteMute(newMsg, 5000, ['6️⃣', '0️⃣', '🚫']);
+    } else if (msg.content.length > 60) {
+      reactDeleteMute(msg, 5000, ['6⃣', '0⃣', '🚫']);
       return;
     }
 
