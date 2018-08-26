@@ -62,7 +62,7 @@ module.exports = {
       const newNumberMatch = oldMsg.content.match(/^([1-9]\d*)/);
 
       if (!newNumberMatch || !numberMatch || newNumberMatch[1] != numberMatch[1]) {
-        reactDeleteMute(newMsg, 5000, ['#️⃣', '❓', '🚫']);
+        reactDeleteMute(newMsg, 5000, ['🔢', '❓', '🚫']);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
       } else if (newMsg.content.length > 50) {
         reactDeleteMute(newMsg, 5000, ['6️⃣', '0️⃣', '🚫']);
@@ -99,7 +99,7 @@ module.exports = {
     }
 
     if (!msg.content.match(/^[1-9]\d*/)) {
-      reactDeleteMute(msg, 5000, ['#️⃣', '❓', '🚫']);
+      reactDeleteMute(msg, 5000, ['🔢', '❓', '🚫']);
       return;
     } else if (msg.content.length > 50) {
       reactDeleteMute(newMsg, 5000, ['6️⃣', '0️⃣', '🚫']);
@@ -177,12 +177,12 @@ function reactDeleteMute(msg, length=0, emojis=[]) {
 
   for (let i = 0; i < emojis.length; i++) {
     setTimeout(() => {
-      msg.react(emojis[i]);
+      msg.react(emojis[i]).catch(err => console.error(err));
     }, i*1200);
   }
 
   setTimeout(() => {
-    msg.delete().catch(err => console.error(err));
+    if (!msg.deleted) msg.delete().catch(err => console.error(err));
   }, Math.max(500, emojis.length*1200));
 
   if (length) {
