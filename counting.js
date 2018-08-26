@@ -50,7 +50,8 @@ module.exports = {
       const numberMatch = msg.content.match(/^([1-9]\d*)/);
 
       if (numberMatch && parseInt(numberMatch[1]) == lastNumber) msg.channel.sendMessage(numberMatch[1]);
-      mute(msg, 'Do not delete your messages! You have been muted for 1 minute.', 60*1000);
+      reactDeleteMute(msg, 30*1000);
+      msg.member.user.send('Do not delete your messages! You have been muted for 30 seconds.');
     });
 
     // Prevent users from editing messages (fix if needed)
@@ -61,10 +62,10 @@ module.exports = {
       const newNumberMatch = oldMsg.content.match(/^([1-9]\d*)/);
 
       if (!newNumberMatch || !numberMatch || newNumberMatch[1] != numberMatch[1]) {
-        mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
+        reactDeleteMute(newMsg, 5000, ['#️⃣', '❓', '🚫']);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
       } else if (newMsg.content.length > 50) {
-        mute(newMsg, 'You edited your message to be over 50 characters!');
+        reactDeleteMute(newMsg, 5000, ['6️⃣', '0️⃣', '🚫']);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
       }
     });
@@ -75,7 +76,7 @@ module.exports = {
       msg.channel.send(highestCounter.user.username);
       return;
     } else if (msg.content == '!counter') {
-      mute(msg);
+      reactDeleteMute(msg);
       msg.channel.send(`Last number: ${lastNumber} from ${lastMember || 'an admin (forced)'}`).then(cmdMsg => {
         setTimeout(() => cmdMsg.delete(), 3000);
       });
@@ -98,22 +99,22 @@ module.exports = {
     }
 
     if (!msg.content.match(/^[1-9]\d*/)) {
-      mute(msg, 'That is not a valid number! You have been muted for 10 seconds.', 10*1000);
+      reactDeleteMute(msg, 5000, ['#️⃣', '❓', '🚫']);
       return;
     } else if (msg.content.length > 50) {
-      mute(msg, 'Messages can only be up to 50 characters! You have been muted for 10 seconds.', 10*1000);
+      reactDeleteMute(newMsg, 5000, ['6️⃣', '0️⃣', '🚫']);
       return;
     }
 
     const number = msg.content.match(/^([1-9]\d*)/)[1];
 
     if (lastNumber !== null && number != (lastNumber + 1).toString()) {
-      mute(msg);
+      reactDeleteMute(msg);
       return;
     }
 
     if (lastMember == msg.member) {
-      mute(msg, `You cannot say a number twice in a row. You have been muted for 10 seconds.`, 10*1000);
+      reactDeleteMute(msg);
       return;
     }
 
@@ -156,19 +157,6 @@ function updateNumber(num, member, msg) {
   }
 }
 
-function mute(msg, reason, length) {
-  LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
-  lastFiveIndex %= 5;
-  
-  setTimeout(() => msg.delete(), 500);
-  if (reason) msg.author.send(reason);
-  if (!length) return;
-  msg.member.addRole(COUNTING_MUTE_ROLE);
-  setTimeout(() => {
-    msg.member.removeRole(COUNTING_MUTE_ROLE);
-  }, length);
-}
-
 let currentlySaving = false;
 function saveFile() {
   if (currentlySaving) return;
@@ -180,5 +168,27 @@ function updateHighestCounterRole() {
   const highestCount = TOTAL_COUNTS[highestCounter.user.id];
   if (highestCount % 100 === 0) {
     HIGHEST_COUNTER_ROLE.setName(`Highest Counter (${(highestCount/1000).toFixed(1)}k)`)
+  }
+}
+
+function reactDeleteMute(msg, length=0, emojis=[]) {
+  LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
+  lastFiveIndex %= 5;
+
+  for (let i = 0; i < emojis.length; i++) {
+    setTimeout(() => {
+      msg.react(emojis[i]);
+    }, i*1200);
+  }
+
+  setTimeout(() => {
+    msg.delete();
+  }, Math.max(500, emojis.length*1200));
+
+  if (length) {
+    msg.member.addRole(COUNTING_MUTE_ROLE);
+    setTimeout(() => {
+      msg.member.removeRole(COUNTING_MUTE_ROLE);
+    }, length);
   }
 }
