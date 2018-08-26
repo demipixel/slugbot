@@ -26,10 +26,6 @@ module.exports = {
       member.removeRole(COUNTING_MUTE_ROLE);
     });
 
-    LAST_COUNTER_ROLE.members.array().forEach(member => {
-      member.removeRole(LAST_COUNTER_ROLE);
-    });
-
     TOTAL_COUNTS = JSON.parse(fs.readFileSync(COUNTER_FILE, 'utf8'));
     let highestId = null;
     Object.keys(TOTAL_COUNTS).forEach(userId => {
