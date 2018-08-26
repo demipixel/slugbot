@@ -209,7 +209,7 @@ client.on('message', msg => {
     }).catch(err => {
       console.log('Error sending message', err);
     });
-  } else if (msg.mentions.users.find(user => user.id == client.user.id)) {
+  } else if (msg.mentions.users.find(user => user.id == client.user.id) && !msg.channel.name.startsWith('counting')) {
     clever.write(msg.content.replace(client.user.toString(), '').trim(), (resp) => {
       if (!resp || resp.error) {
         msg.reply('I don\'t know how to respond...');
