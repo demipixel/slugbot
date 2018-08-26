@@ -64,7 +64,7 @@ module.exports = {
       setTimeout(() => {
         LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
         lastFiveIndex %= 5;
-        
+
         msg.delete();
       }, 2000);
       return;
@@ -76,7 +76,7 @@ module.exports = {
     }
 
     if (lastNumber !== null && msg.content != (lastNumber + 1).toString()) {
-      mute(msg, `That is not the next number! The next number is ${lastNumber + 1}.`);
+      mute(msg);
       return;
     }
 
@@ -116,8 +116,8 @@ function mute(msg, reason, length) {
   LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
   lastFiveIndex %= 5;
   
-  msg.delete();
-  msg.author.send(reason);
+  setTimeout(() => msg.delete(), 500);
+  if (reason) msg.author.send(reason);
   if (!length) return;
   msg.member.addRole(COUNTING_MUTE_ROLE);
   setTimeout(() => {
