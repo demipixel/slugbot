@@ -5,6 +5,8 @@ const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
 const CleverBot = require('cleverbot-node');
 
+const EXTERNAL = [require('./counting.js')];
+
 const clever = new CleverBot();
 clever.configure({ botapi: config.get('cleverbotApiKey') })
 try {
@@ -125,6 +127,10 @@ client.on('ready', () => {
       }).then(role => console.log(`Created ${role.name} major role.`));
     }
   });
+
+  EXTERNAL.forEach(e => {
+    if (e.ready) e.ready(client);
+  });
 });
 
 const repeatMessage = {};
@@ -208,6 +214,10 @@ client.on('message', msg => {
       } else msg.reply(resp.message.replace(/\*/g, '\\*'));
     });
   }
+
+  EXTERNAL.forEach(e => {
+    if (e.message) e.message(client, msg);
+  });
 });
 
 function getClassEmbed(classData) {
