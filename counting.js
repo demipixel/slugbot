@@ -11,6 +11,9 @@ let TOTAL_COUNTS = null;
 
 let highestCounter = null;
 
+const LAST_FIVE_MESSAGES = [];
+let lastFiveIndex = 0;
+
 module.exports = {
   ready: function(client) {
     COUNTING_MUTE_ROLE = client.guilds.first().roles.find('name', 'Counting Mute');
@@ -26,8 +29,32 @@ module.exports = {
     });
     highestCounter = client.guilds.first().members.find('id', highestId);
     if (highestCounter) highestCounter.addRole(HIGHEST_COUNTER_ROLE);
+
+    // Prevent user from deleting messages (fix if needed)
+    client.on('messageDelete', msg => {
+      if (!msg.channel.name.startsWith('counting')) return;
+
+      for (let i = 0; i < 5; i++) {
+        if (LAST_FIVE_MESSAGES[i] && LAST_FIVE_MESSAGES[i].id == msg.id) return; // Deleted by bot
+      }
+
+      if (parseInt(msg.content) == lastNumber) msg.channel.sendMessage(msg.content);
+      mute(msg, 'Do not delete your messages! You have been muted for 1 minute.', 60*1000);
+    });
+
+    // Prevent users from editing messages (fix if needed)
+    client.on('messageUpdate', (oldMsg, newMsg) => {
+      mute(newMsg, 'Do not edit your messages! You have been muted for 1 minute.', 60*1000);
+      if (parseInt(oldMsg.content) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
+    });
   },
   message: function(client, msg) {
+
+    if (msg.content == '!highestcounter') {
+      msg.channel.say(highestCounter.user.username);
+      return;
+    }
+
     if (!msg.channel.name.startsWith('counting')) return;
 
     if (msg.content.match(/^!force \d+$/) && msg.member.roles.find('name', 'Moderator')) {
@@ -35,19 +62,20 @@ module.exports = {
       updateNumber(number, null, msg);
       msg.react('✅');
       setTimeout(() => {
+        LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
+        lastFiveIndex %= 5;
+        
         msg.delete();
       }, 2000);
       return;
     }
 
-    const num = parseInt(msg.content);
-
-    if (isNaN(num)) {
+    if (!msg.content.match(/[1-9]\d*/)) {
       mute(msg, 'That is not a valid number! You have been muted for 1 minute.', 60*1000);
       return;
     }
 
-    if (lastNumber !== null && num != lastNumber + 1) {
+    if (lastNumber !== null && msg.content != (lastNumber + 1).toString()) {
       mute(msg, `That is not the next number! The next number is ${lastNumber + 1}.`);
       return;
     }
@@ -85,6 +113,9 @@ function updateNumber(num, user, msg) {
 }
 
 function mute(msg, reason, length) {
+  LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
+  lastFiveIndex %= 5;
+  
   msg.delete();
   msg.author.send(reason);
   if (!length) return;
