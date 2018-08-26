@@ -5,7 +5,7 @@ let HIGHEST_COUNTER_ROLE = null;
 let LAST_COUNTER_ROLE = null;
 
 let lastNumber = null;
-let lastUser = null;
+let lastMember = null;
 
 const COUNTER_FILE = './counter.json';
 let TOTAL_COUNTS = null;
@@ -61,16 +61,16 @@ module.exports = {
       if (parseInt(oldMsg.content) == lastNumber) oldMsg.channel.sendMessage(oldMsg.content);
     });
 
-    let lastLastUser = null;
+    let lastLastMember = null;
     setInterval(() => {
-      if (lastLastUser == lastUser && lastUser && !lastUser.roles.has(LAST_COUNTER_ROLE)) {
+      if (lastLastMember == lastMember && lastMember && !lastMember.roles.has(LAST_COUNTER_ROLE)) {
         LAST_COUNTER_ROLE.members.array().forEach(member => {
           member.removeRole(LAST_COUNTER_ROLE);
         });
-        lastUser.addRole(LAST_COUNTER_ROLE);
+        lastMember.addRole(LAST_COUNTER_ROLE);
       }
 
-      lastLastUser = lastUser;
+      lastLastMember = lastMember;
     }, 10*1000);
   },
   message: function(client, msg) {
@@ -80,7 +80,7 @@ module.exports = {
       return;
     } else if (msg.content == '!counter') {
       mute(msg);
-      msg.channel.send(`Last number: ${lastNumber} from ${lastUser || 'an admin (forced)'}`).then(cmdMsg => {
+      msg.channel.send(`Last number: ${lastNumber} from ${lastMember || 'an admin (forced)'}`).then(cmdMsg => {
         setTimeout(() => cmdMsg.delete(), 3000);
       });
       return;
@@ -111,13 +111,13 @@ module.exports = {
       return;
     }
 
-    if (lastUser == msg.member.user) {
+    if (lastMember == msg.member) {
       mute(msg, `You cannot say a number twice in a row. You have been muted for 30 seconds.`, 30*1000);
       return;
     }
 
     // Update number
-    updateNumber(lastNumber + 1, msg.member.user, msg);
+    updateNumber(lastNumber + 1, msg.member, msg);
 
     // Increase counter for user
     if (!TOTAL_COUNTS[msg.member.user.id]) TOTAL_COUNTS[msg.member.user.id] = 0;
@@ -135,9 +135,9 @@ module.exports = {
   }
 }
 
-function updateNumber(num, user, msg) {
+function updateNumber(num, member, msg) {
   lastNumber = parseInt(num);
-  lastUser = user;
+  lastMember = member;
   if (lastNumber % 1000 == 0) {
     msg.channel.setName('counting-'+(Math.floor(lastNumber/1000))+'k');
   }
