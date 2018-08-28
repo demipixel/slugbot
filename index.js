@@ -140,12 +140,12 @@ client.on('message', msg => {
   if (msg.author.id == client.user.id) return;
   else if (!msg.member) return;
 
-  if (!repeatMessage[msg.channel.name]) repeatMessage[msg.channel.name] = { msg: '', users: [] };
+  if (!repeatMessage[msg.channel.name]) repeatMessage[msg.channel.name] = { msg: '' };
 
   if (!msg.channel.name.startsWith('counting')) {
     if (msg.content != repeatMessage[msg.channel.name].msg) {
       repeatMessage[msg.channel.name] = { msg: msg.content, users: new Set([msg.member.user.id]) }
-    } else {
+    } else if (repeatMessage[msg.channel.name].users) {
       repeatMessage[msg.channel.name].users.add(msg.member.user.id);
       if (repeatMessage[msg.channel.name].users.size == 3) {
         msg.channel.send(msg.content);
