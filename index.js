@@ -102,7 +102,8 @@ function createClassStrings() {
     Object.keys(classes[quarter]).forEach(classId => {
       const classData = classes[quarter][classId];
       const prefix = quarter == 'current' ? '' : classId + ' ';
-      if (!classStrings[classData.name.toLowerCase()]) classStrings[prefix+classData.name.toLowerCase()] = classData;
+      if (!classData.name) return console.log('Could not find name for class', classData);
+      if (!classStrings[prefix + classData.name.toLowerCase()]) classStrings[prefix + classData.name.toLowerCase()] = classData;
       const nameArr = classData.fullName.split(' ').slice(0, 4);
 
       classStrings[prefix + nameArr.join(' ').toLowerCase()] = classData;
