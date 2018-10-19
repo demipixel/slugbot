@@ -25,7 +25,7 @@ const goldData = JSON.parse(fs.readFileSync('./gold.json'));
 
 const client = new Discord.Client();
 
-let classes = {};
+const classes = {};
 let classStrings = {};
 let lastUpdated = 0;
 
@@ -72,16 +72,22 @@ const EMOJI_MAPPING = {
 const MAJORS = { "UND": "Undeclared", "UNON": "Non Degree", "ANTH": "Anthropology", "APPH": "Applied Physics", "ART": "Art", "ARTG": "Art And Design: Games And Playable Media", "ARTH": "See History Of Art And Visual Culture", "BENG": "Bioengineering", "BIOC": "Biochemistry And Molecular Biology", "BINF": "Bioinformatics", "BIOL": "Biology", "BMEC": "Business Management Economics", "CHEM": "Chemistry", "CLST": "Classical Studies", "CMMU": "Community Studies", "CMPE": "Computer Engineering", "CMPS": "Computer Science", "CMPG": "Computer Science: Computer Game Design", "COGS": "Cognitive Science", "CRES": "Critical Race And Ethnic Studies", "EART": "Earth Sciences", "ECEV": "Ecology And Evolution", "ECON": "Economics", "EE": "Electrical Engineering", "ENVS": "Environmental Studies", "FMST": "Feminist Studies", "FIDM": "Film And Digital Media", "GMST": "German Studies", "GLEC": "Global Economics", "HBIO": "Human Biology", "HIS": "History", " HAVC": "History Of Art And Visual Culture", "ITST": "Italian Studies", "JWST": "Jewish Studies", "LANG": "Language Studies", "LALS": "Latin American And Latino Studies", "LGST": "Legal Studies", "LING": "Linguistics", "LIT": "Literature", "MABI": "Marine Biology", "MATH": "Mathematics", "MCDB": "Molecular, Cell, And Developmental Biology", "MUSC": "Music", "NDT": "Network And Digital Technology", "NBIO": "Neuroscience", "PHIL": "Philosophy", "PHYE": "Physics Education", "PHYS": "Physics", "ASPH": "Physics (astrophysics)", "PLNT": "Plant Sciences", "POLI": "Politics", "PSYC": "Psychology", "ROBO": "Robotics Engineering", "SOCI": "Sociology", "SPST": "Spanish Studies", "TIM": "Technology And Information Management", "THEA": "Theater Arts", "PRFM": "Pre-film And Digital Media", "XESA": "Earth Sciences/anthropology", "XEBI": "Environmental Studies/biology", "XEEA": "Environmental Studies/earth Sciences", "XEEC": "Environmental Studies/economics", "XEMA": "Economics/mathematics", "XLPT": "Latin American And Latino Studies/politics", "XLSY": "Latin American And Latino Studies/sociology" }
 
 try {
-  const info = JSON.parse(fs.readFileSync('./classdata.json'));
+  const info = JSON.parse(fs.readFileSync('./classdata.json', 'utf8'));
   lastUpdated = info.lastUpdated;
-  classes = info.classes;
+  classes.current = info.classes;
 } catch (e) {
   // Will fetch classes
 }
 
+['winter'].forEach(classKey => {
+  if (fs.existsSync(`./classdata-${classKey}.json`)) {
+    classes[classKey] = JSON.parse(fs.readFileSync(`./classdata-${classKey}.json`, 'utf8'));
+  }
+});
+
 setTimeout(() => {
   const gotClasses = returnedClasses => {
-    classes = returnedClasses;
+    classes.current = returnedClasses;
     createClassStrings();
   }
   fetchclasses(config.get('classSearch.term'), gotClasses);
@@ -92,18 +98,21 @@ setTimeout(() => {
 
 function createClassStrings() {
   classStrings = {};
-  Object.keys(classes).forEach(classId => {
-    const classData = classes[classId];
-    if (!classStrings[classData.name.toLowerCase()]) classStrings[classData.name.toLowerCase()] = classId;
-    const nameArr = classData.fullName.split(' ').slice(0, 4);
+  Object.keys(classes).forEach(quarter => {
+    Object.keys(classes[quarter]).forEach(classId => {
+      const classData = classes[quarter][classId];
+      const prefix = quarter == 'current' ? '' : classId + ' ';
+      if (!classStrings[classData.name.toLowerCase()]) classStrings[prefix+classData.name.toLowerCase()] = classData;
+      const nameArr = classData.fullName.split(' ').slice(0, 4);
 
-    classStrings[nameArr.join(' ').toLowerCase()] = classId;
-    classStrings[nameArr.join(' ').toLowerCase().replace(' -', '')] = classId;
+      classStrings[prefix + nameArr.join(' ').toLowerCase()] = classData;
+      classStrings[prefix + nameArr.join(' ').toLowerCase().replace(' -', '')] = classData;
 
-    if (parseInt(nameArr[3]) < 10) {
-      classStrings[classData.name.toLowerCase() + ' - ' + nameArr[3].slice(1)] = classId;
-      classStrings[classData.name.toLowerCase() + ' ' + nameArr[3].slice(1)] = classId;
-    }
+      if (parseInt(nameArr[3]) < 10) {
+        classStrings[prefix + classData.name.toLowerCase() + ' - ' + nameArr[3].slice(1)] = classData;
+        classStrings[prefix + classData.name.toLowerCase() + ' ' + nameArr[3].slice(1)] = classData;
+      }
+    });
   });
 }
 
@@ -182,10 +191,10 @@ client.on('message', msg => {
   } else if (msg.content.indexOf('!class') == 0) {
     const match = msg.content.match(/!class (.+)/);
     if (!match) return msg.reply(`Invalid usage! Try \`!class <class name or number>\` (e.g. \`!class ams 3\`)`)
-    const classData = classes[match[1]] || classes[classStrings[match[1].toLowerCase()]];
+    const classData = classes.current[match[1]] || classStrings[match[1].toLowerCase()];
     if (!classData) msg.reply(`Could not find that class!`);
     else msg.channel.send('', { embed: getClassEmbed(classData) });
-  } else if (msg.content[0] == '!' && (classes[msg.content.slice(1)] || classes[classStrings[msg.content.slice(1).toLowerCase()]])) {
+  } else if (msg.content[0] == '!' && (classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()])) {
     const classData = classes[msg.content.slice(1)] || classes[classStrings[msg.content.slice(1).toLowerCase()]];
     msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content == '!github') {
