@@ -101,7 +101,7 @@ function createClassStrings() {
   Object.keys(classes).forEach(quarter => {
     Object.keys(classes[quarter]).forEach(classId => {
       const classData = classes[quarter][classId];
-      const prefix = quarter == 'current' ? '' : classId + ' ';
+      const prefix = quarter == 'current' ? '' : quarter + ' ';
       if (!classData.name) return console.log('Could not find name for class', classData);
       if (!classStrings[prefix + classData.name.toLowerCase()]) classStrings[prefix + classData.name.toLowerCase()] = classData;
       const nameArr = classData.fullName.split(' ').slice(0, 4);
@@ -116,6 +116,8 @@ function createClassStrings() {
     });
   });
 }
+
+createClassStrings();
 
 let selectorMessages = null;
 client.on('ready', () => {
@@ -196,7 +198,7 @@ client.on('message', msg => {
     if (!classData) msg.reply(`Could not find that class!`);
     else msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content[0] == '!' && (classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()])) {
-    const classData = classes[msg.content.slice(1)] || classes[classStrings[msg.content.slice(1).toLowerCase()]];
+    const classData = classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()];
     msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content == '!github') {
     msg.reply('https://github.com/demipixel/slugbot');
