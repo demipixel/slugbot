@@ -81,7 +81,7 @@ try {
 
 ['winter'].forEach(classKey => {
   if (fs.existsSync(`./classdata-${classKey}.json`)) {
-    classes[classKey] = JSON.parse(fs.readFileSync(`./classdata-${classKey}.json`, 'utf8'));
+    classes[classKey] = JSON.parse(fs.readFileSync(`./classdata-${classKey}.json`, 'utf8')).classes;
   }
 });
 
