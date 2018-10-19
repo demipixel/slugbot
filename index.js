@@ -79,7 +79,7 @@ try {
   // Will fetch classes
 }
 
-['winter'].forEach(classKey => {
+config.get('classSearch.previousQuarters').forEach(classKey => {
   if (fs.existsSync(`./classdata-${classKey}.json`)) {
     classes[classKey] = JSON.parse(fs.readFileSync(`./classdata-${classKey}.json`, 'utf8')).classes;
   }
