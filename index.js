@@ -154,7 +154,7 @@ client.on('message', msg => {
 
   if (!repeatMessage[msg.channel.name]) repeatMessage[msg.channel.name] = { msg: '' };
 
-  if (!msg.channel.name.startsWith('counting') && false) { // DISABLED
+  if (!msg.channel.name.startsWith('counting')) {
     if (msg.content != repeatMessage[msg.channel.name].msg) {
       repeatMessage[msg.channel.name] = { msg: msg.content, users: new Set([msg.member.user.id]) }
     } else if (repeatMessage[msg.channel.name].users) {
