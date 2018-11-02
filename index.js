@@ -197,7 +197,7 @@ client.on('message', msg => {
     const classData = classes.current[match[1]] || classStrings[match[1].toLowerCase()];
     if (!classData) msg.reply(`Could not find that class!`);
     else msg.channel.send('', { embed: getClassEmbed(classData) });
-  } else if (msg.content[0] == '!' && (classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()])) {
+  } else if (classes.current && msg.content[0] == '!' && (classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()])) {
     const classData = classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()];
     msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content == '!github') {
