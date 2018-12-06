@@ -192,12 +192,22 @@ client.on('message', msg => {
       }
     }
   } else if (msg.content.indexOf('!class') == 0) {
+    if (msg.channel.name != 'commands') {
+      msg.channel.send('You can only use this in '+client.channels.find('id', config.get('commandsChannel')));
+      return;
+    }
+
     const match = msg.content.match(/!class (.+)/);
     if (!match) return msg.reply(`Invalid usage! Try \`!class <class name or number>\` (e.g. \`!class ams 3\`)`)
     const classData = classes.current[match[1]] || classStrings[match[1].toLowerCase()];
     if (!classData) msg.reply(`Could not find that class!`);
     else msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (classes.current && msg.content[0] == '!' && (classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()])) {
+    if (msg.channel.name != 'commands') {
+      msg.channel.send('You can only use this in '+client.channels.find('id', config.get('commandsChannel')));
+      return;
+    }
+    
     const classData = classes.current[msg.content.slice(1)] || classStrings[msg.content.slice(1).toLowerCase()];
     msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content == '!github') {

@@ -34,6 +34,7 @@
     }
   },
   "selectorChannel": "",
+  "commandsChannel": "",
   "adminRoleName": "",
 
   "messages": {
@@ -41,5 +42,11 @@
       "colleges": "Select which college you are in:",
       "years": "Select what year you will graduate (CO -> Class Of):"
     }
+  },
+
+  "gold": {
+    "emoji": "star2",
+    "cooldown": 2880,
+    "channel": "gold"
   }
 }
