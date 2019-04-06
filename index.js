@@ -283,8 +283,17 @@ client.on('messageReactionAdd', (reactionObj, user) => {
     const allRoles = Object.values(emojiToRole);
     reactionObj.message.guild.fetchMember(user).then(member => {
       setTimeout(() => reactionObj.remove(user), 200);
-      // Remove roles relating to message
-      member.removeRoles(member.roles.filterArray(role => allRoles.includes(role.name)));
+
+      if (member.roles.find('name', roleName)) {
+        member.removeRoles(member.roles.filterArray(role => role.name == roleName));
+        user.send('Removed role.');
+        return;
+      }
+
+      if (type != 'classes')  {
+        // Remove roles relating to message
+        member.removeRoles(member.roles.filterArray(role => allRoles.includes(role.name)));
+      }
       const roleToAdd = reactionObj.message.guild.roles.find('name', roleName);
       setTimeout(() => {
         member.addRole(roleToAdd)
