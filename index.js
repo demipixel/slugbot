@@ -122,6 +122,7 @@ createClassStrings();
 let selectorMessages = null;
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
+  client.channels.find('id', config.get('classSelectorChannel')).fetchMessages({ limit: 100 })
   client.channels.find('id', config.get('selectorChannel')).fetchMessages({ limit: 100 })
     .then(messages => {
       console.log('Got selectorChannel messages!');
