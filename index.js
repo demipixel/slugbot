@@ -213,6 +213,10 @@ client.on('message', msg => {
     msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (msg.content == '!github') {
     msg.reply('https://github.com/demipixel/slugbot');
+  } else if (msg.content.startsWith('!haha ')) {
+    const msg = msg.content.slice(6);
+    const funky = msg.split('').map((c,i) => i % 2 == 0 ? c.toLowerCase() : c.toUpperCase()).join('');
+    msg.channel.send(funky);
   } else if (msg.content.indexOf('!selector') == 0) {
     const match = msg.content.match(/!selector ([^ ]+)( forever)?/);
     if (!match) return msg.reply('Invalid usage! Try `!selector <name of selector>`');
