@@ -214,8 +214,9 @@ client.on('message', msg => {
   } else if (msg.content == '!github') {
     msg.reply('https://github.com/demipixel/slugbot');
   } else if (msg.content.startsWith('!haha ')) {
-    const msg = msg.content.slice(6);
-    const funky = msg.split('').map((c,i) => i % 2 == 0 ? c.toLowerCase() : c.toUpperCase()).join('');
+    const str = msg.content.slice(6);
+    const funky = str.split('').map((c,i) => i % 2 == 0 ? c.toLowerCase() : c.toUpperCase()).join('');
+    msg.delete();
     msg.channel.send(funky);
   } else if (msg.content.indexOf('!selector') == 0) {
     const match = msg.content.match(/!selector ([^ ]+)( forever)?/);
