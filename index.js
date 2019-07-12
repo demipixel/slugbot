@@ -5,10 +5,16 @@ const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
 const EXTERNAL = [require('./counting.js')];
 
-let CBOTcounter = 0;
+let response = '';
+let responseflag = false;
 
 const {PythonShell} = require("python-shell");
 var pyshell = new PythonShell('./cbotmult.py',{pythonPath : 'python', pythonOptions: ['-u'], mode: 'text'});
+
+pyshell.on('message', function (message) {
+  response = message;
+  responseflag = true;
+});
 
 if (!fs.existsSync('./gold.json')) {
   fs.writeFileSync('./gold.json', '{}');
@@ -231,22 +237,18 @@ client.on('message', msg => {
       console.log('Error sending message', err);
     });
   } else if (msg.mentions.users.find(user => user.id == client.user.id) && !msg.channel.name.startsWith('counting')) {
-    /* There is an error here that I am confused about, it seems to recieve the same message event multiple times
-    I jerry rigged a fix by making it check a value.
-    This problem should be fixed though since each time this is called it adds one more message event than the last time.
-    */
-
-   pyshell.send(msg.content.replace(client.user.toString(), '').trim()).end;
-   CBOTcounter = 0;
-   pyshell.on('message', function (message) {
-     if(CBOTcounter != 0){
-       //console.log("repeat attempted");
-       return;
-     }
-     CBOTcounter++;
-     //console.log("Message Recieved", message);
-     msg.reply(message);
-   });
+      /* 
+      Sends a message and waits until the response is updated to reply.
+      */
+      pyshell.send(msg.content.replace(client.user.toString(), '').trim()).end;
+      var flagCheck = setInterval(function(){
+        if(responseflag == true){
+          clearInterval(flagCheck);
+          msg.reply(response);
+          responseflag = false;
+        }
+      }, 1000);
+      
   }
 
   EXTERNAL.forEach(e => {
@@ -356,3 +358,14 @@ function emojiNameToSymbol(str) {
 }
 
 client.login(config.get('discord.token'));
+
+process.on('SIGINT', function() {
+  console.log("Caught interrupt signal");
+  pyshell.end(function (err,code,signal) {
+    if (err) throw err;
+    console.log('The exit code was: ' + code);
+    console.log('The exit signal was: ' + signal);
+    console.log('finished');
+  });
+      process.exit();
+});
