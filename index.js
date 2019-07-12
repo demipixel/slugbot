@@ -5,15 +5,15 @@ const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
 const EXTERNAL = [require('./counting.js')];
 
-let response = '';
-let responseflag = false;
+// Queue to hold the messages while waiting for a response.
+var messageQueue = [];
 
 const {PythonShell} = require("python-shell");
 var pyshell = new PythonShell('./cbotmult.py',{pythonPath : 'python', pythonOptions: ['-u'], mode: 'text'});
 
+// Replies to the messages with a response.
 pyshell.on('message', function (message) {
-  response = message;
-  responseflag = true;
+  messageQueue.pop().reply(message);
 });
 
 if (!fs.existsSync('./gold.json')) {
@@ -238,17 +238,13 @@ client.on('message', msg => {
     });
   } else if (msg.mentions.users.find(user => user.id == client.user.id) && !msg.channel.name.startsWith('counting')) {
       /* 
-      Sends a message and waits until the response is updated to reply.
+      Sends a message to cleverbot.
       */
-      pyshell.send(msg.content.replace(client.user.toString(), '').trim()).end;
-      var flagCheck = setInterval(function(){
-        if(responseflag == true){
-          clearInterval(flagCheck);
-          msg.reply(response);
-          responseflag = false;
-        }
-      }, 1000);
-      
+
+      messageQueue.unshift(msg);
+
+      pyshell.send(msg.content.replace(client.user.toString(), '').trim());
+
   }
 
   EXTERNAL.forEach(e => {
