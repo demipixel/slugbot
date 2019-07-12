@@ -3,19 +3,12 @@ const config = require('config');
 const fs = require('fs');
 const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
-const CleverBot = require('cleverbot-node');
-
 const EXTERNAL = [require('./counting.js')];
 
-const clever = new CleverBot();
-clever.configure({ botapi: config.get('cleverbotApiKey') })
-try {
-  CleverBot.prepare(function() {
-    console.log('CleverBot is online');
-  });
-} catch (err) {
-  console.log('Cannot put CleverBot online!');
-}
+let CBOTcounter = 0;
+
+const {PythonShell} = require("python-shell");
+var pyshell = new PythonShell('./cbotmult.py',{pythonPath : 'python', pythonOptions: ['-u'], mode: 'text'});
 
 if (!fs.existsSync('./gold.json')) {
   fs.writeFileSync('./gold.json', '{}');
@@ -238,11 +231,22 @@ client.on('message', msg => {
       console.log('Error sending message', err);
     });
   } else if (msg.mentions.users.find(user => user.id == client.user.id) && !msg.channel.name.startsWith('counting')) {
-    clever.write(msg.content.replace(client.user.toString(), '').trim(), (resp) => {
-      if (!resp || resp.error) {
-        msg.reply('I don\'t know how to respond...');
-      } else msg.reply(resp.message.replace(/\*/g, '\\*'));
-    });
+    /* There is an error here that I am confused about, it seems to recieve the same message event multiple times
+    I jerry rigged a fix by making it check a value.
+    This problem should be fixed though since each time this is called it adds one more message event than the last time.
+    */
+
+   pyshell.send(msg.content.replace(client.user.toString(), '').trim()).end;
+   CBOTcounter = 0;
+   pyshell.on('message', function (message) {
+     if(CBOTcounter != 0){
+       //console.log("repeat attempted");
+       return;
+     }
+     CBOTcounter++;
+     //console.log("Message Recieved", message);
+     msg.reply(message);
+   });
   }
 
   EXTERNAL.forEach(e => {
