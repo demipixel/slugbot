@@ -3,19 +3,18 @@ const config = require('config');
 const fs = require('fs');
 const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
-const CleverBot = require('cleverbot-node');
-
 const EXTERNAL = [require('./counting.js')];
 
-const clever = new CleverBot();
-clever.configure({ botapi: config.get('cleverbotApiKey') })
-try {
-  CleverBot.prepare(function() {
-    console.log('CleverBot is online');
-  });
-} catch (err) {
-  console.log('Cannot put CleverBot online!');
-}
+// Queue to hold the messages while waiting for a response.
+var messageQueue = [];
+
+const {PythonShell} = require("python-shell");
+var pyshell = new PythonShell('./cbotmult.py',{pythonPath : 'python', pythonOptions: ['-u'], mode: 'text'});
+
+// Replies to the messages with a response.
+pyshell.on('message', function (message) {
+  messageQueue.pop().reply(message);
+});
 
 if (!fs.existsSync('./gold.json')) {
   fs.writeFileSync('./gold.json', '{}');
@@ -238,11 +237,14 @@ client.on('message', msg => {
       console.log('Error sending message', err);
     });
   } else if (msg.mentions.users.find(user => user.id == client.user.id) && !msg.channel.name.startsWith('counting')) {
-    clever.write(msg.content.replace(client.user.toString(), '').trim(), (resp) => {
-      if (!resp || resp.error) {
-        msg.reply('I don\'t know how to respond...');
-      } else msg.reply(resp.message.replace(/\*/g, '\\*'));
-    });
+      /* 
+      Sends a message to cleverbot.
+      */
+
+      messageQueue.unshift(msg);
+
+      pyshell.send(msg.content.replace(client.user.toString(), '').trim());
+
   }
 
   EXTERNAL.forEach(e => {
@@ -352,3 +354,14 @@ function emojiNameToSymbol(str) {
 }
 
 client.login(config.get('discord.token'));
+
+process.on('SIGINT', function() {
+  console.log("Caught interrupt signal");
+  pyshell.end(function (err,code,signal) {
+    if (err) throw err;
+    console.log('The exit code was: ' + code);
+    console.log('The exit signal was: ' + signal);
+    console.log('finished');
+  });
+      process.exit();
+});
