@@ -7,7 +7,6 @@ cb = cleverbotfree.cbfree.Cleverbot()
 # Install it through pip
 
 def chat():
-    counter = 0;
     try:
         cb.browser.get(cb.url)
     except:
@@ -19,7 +18,6 @@ def chat():
         except:
             sys.exit()
         userInput = input()
-        #counter = counter + 1;
         cb.send_input(userInput)
         bot = cb.get_response()
         print(bot)
