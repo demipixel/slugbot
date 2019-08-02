@@ -3,26 +3,10 @@ const config = require('config');
 const fs = require('fs');
 const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
-const CleverBot = require('cleverbot-node');
-
+const Cleverbot = require('./cleverbot');
 const EXTERNAL = [require('./counting.js')];
 
-const clever = new CleverBot();
-clever.configure({ botapi: config.get('cleverbotApiKey') })
-try {
-  CleverBot.prepare(function() {
-    console.log('CleverBot is online');
-  });
-} catch (err) {
-  console.log('Cannot put CleverBot online!');
-}
-
-if (!fs.existsSync('./gold.json')) {
-  fs.writeFileSync('./gold.json', '{}');
-}
-
-const goldData = JSON.parse(fs.readFileSync('./gold.json'));
-
+const clever = new Cleverbot();
 const client = new Discord.Client();
 
 const classes = {};
@@ -238,10 +222,8 @@ client.on('message', msg => {
       console.log('Error sending message', err);
     });
   } else if (msg.mentions.users.find(user => user.id == client.user.id) && !msg.channel.name.startsWith('counting')) {
-    clever.write(msg.content.replace(client.user.toString(), '').trim(), (resp) => {
-      if (!resp || resp.error) {
-        msg.reply('I don\'t know how to respond...');
-      } else msg.reply(resp.message.replace(/\*/g, '\\*'));
+    clever.send(msg.content.replace(client.user.toString(), '').trim(), str => {
+      if (str) msg.reply(str.replace(/\*/g, '\\*'));
     });
   }
 
