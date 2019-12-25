@@ -1,3 +1,4 @@
 config/default.json
 classdata.json
 counter.json
+node_modules

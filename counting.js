@@ -145,7 +145,7 @@ module.exports = {
       }
 
       lastMessageTimeout = null;
-    }, 15*1000);
+    }, 15*60*1000);
   }
 }
 
