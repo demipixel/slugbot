@@ -61,8 +61,10 @@ class Tracker {
     const fromUserId = msg.member.user.id;
 
     if (msg.content !== this.str) {
-      this.sendFinishMessage(msg, false);
-      this.saveIfHighScore();
+      if (this.users.size > 3) {
+        this.sendFinishMessage(msg, false);
+        this.saveIfHighScore();
+      }
       return false;
     } else if (this.users.has(fromUserId)) {
       if (this.users.size < 3) {
