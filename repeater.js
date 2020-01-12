@@ -49,7 +49,7 @@ class Tracker {
     this.msgObj = firstMessage;
     this.str = firstMessage.content;
     this.users = new Set();
-    this.users.add(userId);
+    this.users.add(firstMessage.member.user.id);
   }
 
   /**
@@ -61,7 +61,7 @@ class Tracker {
     const fromUserId = msg.member.user.id;
 
     if (msg.content !== this.str) {
-      this.sendFinishMessage(false);
+      this.sendFinishMessage(msg, false);
       this.saveIfHighScore();
       return false;
     } else if (this.users.has(fromUserId)) {
@@ -70,7 +70,7 @@ class Tracker {
         this.users.add(fromUserId);
         return true;
       } else {
-        this.sendFinishMessage(true);
+        this.sendFinishMessage(msg, true);
         this.saveIfHighScore();
         return false;
       }
@@ -84,7 +84,7 @@ class Tracker {
     }
   }
 
-  sendFinishMessage(showDuplicateUserMessage) {
+  sendFinishMessage(msg, showDuplicateUserMessage) {
     const finalMessage =
       this.users.size > highestCombo.count
         ? `New high score of ${this.users.size}! (Old high score: ${highestCombo.count})`
