@@ -10,6 +10,12 @@ let highestCombo = {
 
 const messageTrackers = {};
 
+const TrackerResponse = {
+  NONE: 0,
+  RESET: 1,
+  CLEAR: 2,
+};
+
 module.exports = {
   ready: client => {
     try {
@@ -34,9 +40,9 @@ module.exports = {
       const tracker = messageTrackers[msg.channel.name];
       if (tracker) {
         const response = tracker.receiveMessage(msg);
-        if (response === Tracker.RESET) {
+        if (response === TrackerResponse.RESET) {
           messageTrackers[msg.channel.name] = new Tracker(msg);
-        } else if (response === Tracker.CLEAR) {
+        } else if (response === TrackerResponse.CLEAR) {
           delete messageTrackers[msg.channel.name];
         }
       } else {
@@ -47,10 +53,6 @@ module.exports = {
 };
 
 class Tracker {
-  static NONE = 0;
-  static RESET = 1; // Reset tracker to empty
-  static CLEAR = 2; // Completely nullify tracker
-
   constructor(firstMessage) {
     this.msgObj = firstMessage;
     this.str = firstMessage.content;
@@ -70,17 +72,17 @@ class Tracker {
       if (this.users.size > 3) {
         this.sendFinishMessage(msg, false);
         this.saveIfHighScore();
-        return Tracker.CLEAR;
+        return TrackerResponse.CLEAR;
       } else {
-        return Tracker.RESET;
+        return TrackerResponse.RESET;
       }
     } else if (this.users.has(fromUserId)) {
       if (this.users.size < 3) {
-        return Tracker.RESET;
+        return TrackerResponse.RESET;
       } else {
         this.sendFinishMessage(msg, true);
         this.saveIfHighScore();
-        return Tracker.CLEAR;
+        return TrackerResponse.CLEAR;
       }
     } else {
       this.users.add(fromUserId);
@@ -88,7 +90,7 @@ class Tracker {
         msg.channel.send(msg.content);
         this.users.add('me');
       }
-      return Tracker.NONE;
+      return TrackerResponse.NONE;
     }
   }
 
