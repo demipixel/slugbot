@@ -33,8 +33,10 @@ module.exports = {
     } else if (validTrackerChannel && !msg.content.startsWith('!')) {
       const tracker = messageTrackers[msg.channel.name];
       if (tracker) {
-        const keepTracker = tracker.receiveMessage(msg);
-        if (!keepTracker) {
+        const response = tracker.receiveMessage(msg);
+        if (response === Tracker.RESET) {
+          messageTrackers[msg.channel.name] = new Tracker(msg);
+        } else if (response === Tracker.CLEAR) {
           delete messageTrackers[msg.channel.name];
         }
       } else {
@@ -45,6 +47,10 @@ module.exports = {
 };
 
 class Tracker {
+  static NONE = 0;
+  static RESET = 1; // Reset tracker to empty
+  static CLEAR = 2; // Completely nullify tracker
+
   constructor(firstMessage) {
     this.msgObj = firstMessage;
     this.str = firstMessage.content;
@@ -64,17 +70,17 @@ class Tracker {
       if (this.users.size > 3) {
         this.sendFinishMessage(msg, false);
         this.saveIfHighScore();
+        return Tracker.CLEAR;
+      } else {
+        return Tracker.RESET;
       }
-      return false;
     } else if (this.users.has(fromUserId)) {
       if (this.users.size < 3) {
-        this.users = new Set();
-        this.users.add(fromUserId);
-        return true;
+        return Tracker.RESET;
       } else {
         this.sendFinishMessage(msg, true);
         this.saveIfHighScore();
-        return false;
+        return Tracker.CLEAR;
       }
     } else {
       this.users.add(fromUserId);
@@ -82,7 +88,7 @@ class Tracker {
         msg.channel.send(msg.content);
         this.users.add('me');
       }
-      return true;
+      return Tracker.NONE;
     }
   }
 
