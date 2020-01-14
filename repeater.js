@@ -106,7 +106,11 @@ class Tracker {
       ? ' (you already participated in this chain)'
       : '';
 
-    msg.channel.send(`C-C-C-Combo Breaker${duplicateUser}! ${finalMessage}`);
+    msg.channel.send(
+      `${'C-'.repeat(
+        this.users.size - 1,
+      )}Combo Breaker${duplicateUser}! ${finalMessage}`,
+    );
   }
 
   saveIfHighScore() {
