@@ -352,6 +352,10 @@ client.on('message', msg => {
     clever.send(msg.content.replace(client.user.toString(), '').trim(), str => {
       if (str) msg.reply(str.replace(/\*/g, '\\*'));
     });
+  } else if (msg.content.match(/(^|[^a-z])gen($|[^a-z])/i)) {
+    // No gen
+    msg.delete();
+    msg.author.send('You cannot have gen in your message. No gen.');
   }
 
   EXTERNAL.forEach(e => {
