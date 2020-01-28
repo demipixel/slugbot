@@ -4,7 +4,7 @@ const fs = require('fs');
 const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
 const Cleverbot = require('./cleverbot');
-const EXTERNAL = [require('./counting.js'), require('./repeater')];
+const EXTERNAL = [require('./counting.js')];
 
 const clever = new Cleverbot();
 const client = new Discord.Client();
