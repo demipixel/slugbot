@@ -45,8 +45,9 @@
   },
 
   "gold": {
-    "emoji": "star2",
-    "cooldown": 2880,
-    "channel": "gold"
+    "emoji": "gold",
+    "board_channel": "gold",
+    "add_to_board": 1,
+    "min_to_keep": 1
   }
 }

@@ -4,7 +4,7 @@ const fs = require('fs');
 const emojiLib = require('node-emoji');
 const fetchclasses = require('./fetchclasses');
 const Cleverbot = require('./cleverbot');
-const EXTERNAL = [require('./counting.js')];
+const EXTERNAL = [require('./counting.js'), require('./gold.js')];
 
 const clever = new Cleverbot();
 const client = new Discord.Client();
@@ -187,10 +187,10 @@ let selectorMessages = null;
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
   client.channels
-    .find('id', config.get('classSelectorChannel'))
+    .find(channel => channel.id === config.get('classSelectorChannel'))
     .fetchMessages({ limit: 100 });
   client.channels
-    .find('id', config.get('selectorChannel'))
+    .find(channel => channel.id === config.get('selectorChannel'))
     .fetchMessages({ limit: 100 })
     .then(messages => {
       console.log('Got selectorChannel messages!');
@@ -201,15 +201,18 @@ client.on('ready', () => {
     })
     .catch(e => console.log('Error getting selectorChannel messages', e));
 
-  const guild = client.channels.find('id', config.get('selectorChannel')).guild;
+  const guild = client.channels.find(
+    channel => channel.id === config.get('selectorChannel'),
+  ).guild;
   Object.values(MAJORS).forEach(major => {
     const guild = client.guilds.first();
-    if (!guild.roles.find('name', major)) {
+    if (!guild.roles.find(role => role.name === major)) {
       guild
         .createRole({
           name: major,
         })
-        .then(role => console.log(`Created ${role.name} major role.`));
+        .then(role => console.log(`Created ${role.name} major role.`))
+        .catch(err => console.error('Could not create role for ' + major, err));
     }
   });
 
@@ -361,7 +364,6 @@ client.on('message', msg => {
 
 function getClassEmbed(classData) {
   return {
-    title: classData.fullName,
     type: 'rich',
     color: '16040514', // #f4c242
     description: classData.description,

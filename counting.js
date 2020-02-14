@@ -19,9 +19,15 @@ let lastMessageTimeout = null;
 
 module.exports = {
   ready: function(client) {
-    COUNTING_MUTE_ROLE = client.guilds.first().roles.find('name', 'Counting Mute');
-    HIGHEST_COUNTER_ROLE = client.guilds.first().roles.find(r => r.name.startsWith('Highest Counter'));
-    LAST_COUNTER_ROLE = client.guilds.first().roles.find('name', 'Last Counter');
+    COUNTING_MUTE_ROLE = client.guilds
+      .first()
+      .roles.find(role => role.name === 'Counting Mute');
+    HIGHEST_COUNTER_ROLE = client.guilds
+      .first()
+      .roles.find(role => role.name.startsWith('Highest Counter'));
+    LAST_COUNTER_ROLE = client.guilds
+      .first()
+      .roles.find(role => role.name === 'Last Counter');
 
     // Remove anyone with mute role on startup
     COUNTING_MUTE_ROLE.members.array().forEach(member => {
@@ -32,11 +38,17 @@ module.exports = {
     let highestId = null;
     Object.keys(TOTAL_COUNTS).forEach(userId => {
       // Check to make sure user exists and that they're the new highest
-      if (!highestId || TOTAL_COUNTS[userId] > TOTAL_COUNTS[highestId] && client.guilds.first().members.find('id', userId)) {
+      if (
+        !highestId ||
+        (TOTAL_COUNTS[userId] > TOTAL_COUNTS[highestId] &&
+          client.guilds.first().members.find(member => member.id === userId))
+      ) {
         highestId = userId;
       }
     });
-    highestCounter = client.guilds.first().members.find('id', highestId);
+    highestCounter = client.guilds
+      .first()
+      .members.find(member => member.id === highestId);
     if (highestCounter) highestCounter.addRole(HIGHEST_COUNTER_ROLE);
 
     // Prevent user from deleting messages (fix if needed)
@@ -49,9 +61,14 @@ module.exports = {
 
       const numberMatch = msg.content.match(/^([1-9]\d*)/);
 
-      if (numberMatch && parseInt(numberMatch[1]) == lastNumber) msg.channel.sendMessage(numberMatch[1]);
-      reactDeleteMute(msg, 30*1000);
-      msg.member.user.send('Do not delete your messages! You have been muted for 30 seconds.').catch(err => console.error(err));
+      if (numberMatch && parseInt(numberMatch[1]) == lastNumber)
+        msg.channel.sendMessage(numberMatch[1]);
+      reactDeleteMute(msg, 30 * 1000);
+      msg.member.user
+        .send(
+          'Do not delete your messages! You have been muted for 30 seconds.',
+        )
+        .catch(err => console.error(err));
     });
 
     // Prevent users from editing messages (fix if needed)
@@ -61,31 +78,44 @@ module.exports = {
       const numberMatch = oldMsg.content.match(/^([1-9]\d*)/);
       const newNumberMatch = newMsg.content.match(/^([1-9]\d*)/);
 
-      if (!newNumberMatch || !numberMatch || newNumberMatch[1] != numberMatch[1]) {
+      if (
+        !newNumberMatch ||
+        !numberMatch ||
+        newNumberMatch[1] != numberMatch[1]
+      ) {
         reactDeleteMute(newMsg, 5000, ['🔢', '❓', '🚫']);
-        if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
+        if (numberMatch && parseInt(numberMatch[1]) == lastNumber)
+          oldMsg.channel.sendMessage(numberMatch[1]);
       } else if (newMsg.content.length > 60) {
         reactDeleteMute(newMsg, 5000, ['6⃣', '0⃣', '🚫']);
-        if (numberMatch && parseInt(numberMatch[1]) == lastNumber) oldMsg.channel.sendMessage(numberMatch[1]);
+        if (numberMatch && parseInt(numberMatch[1]) == lastNumber)
+          oldMsg.channel.sendMessage(numberMatch[1]);
       }
     });
   },
   message: function(client, msg) {
-
     if (msg.content == '!highestcounter') {
       msg.channel.send(highestCounter.user.username);
       return;
     } else if (msg.content == '!counter') {
       reactDeleteMute(msg);
-      msg.channel.send(`Last number: ${lastNumber} from ${lastMember || 'an admin (forced)'}`).then(cmdMsg => {
-        setTimeout(() => cmdMsg.delete(), 3000);
-      });
+      msg.channel
+        .send(
+          `Last number: ${lastNumber} from ${lastMember ||
+            'an admin (forced)'}`,
+        )
+        .then(cmdMsg => {
+          setTimeout(() => cmdMsg.delete(), 3000);
+        });
       return;
     }
 
     if (!msg.channel.name.startsWith('counting')) return;
 
-    if (msg.content.match(/^!force \d+$/) && msg.member.roles.find('name', 'Moderator')) {
+    if (
+      msg.content.match(/^!force \d+$/) &&
+      msg.member.roles.find(role => role.name === 'Moderator')
+    ) {
       const number = msg.content.match(/^!force (\d+)$/)[1];
       updateNumber(number, null, msg);
       msg.react('✅');
@@ -119,14 +149,21 @@ module.exports = {
     }
 
     // Update number
-    updateNumber(lastNumber ? lastNumber + 1 : parseInt(number), msg.member, msg);
+    updateNumber(
+      lastNumber ? lastNumber + 1 : parseInt(number),
+      msg.member,
+      msg,
+    );
 
     // Increase counter for user
     if (!TOTAL_COUNTS[msg.member.user.id]) TOTAL_COUNTS[msg.member.user.id] = 0;
     TOTAL_COUNTS[msg.member.user.id]++;
 
     // Change role holder if needed
-    if (!highestCounter || TOTAL_COUNTS[msg.member.user.id] > TOTAL_COUNTS[highestCounter.user.id]) {
+    if (
+      !highestCounter ||
+      TOTAL_COUNTS[msg.member.user.id] > TOTAL_COUNTS[highestCounter.user.id]
+    ) {
       if (highestCounter) highestCounter.removeRole(HIGHEST_COUNTER_ROLE);
       highestCounter = msg.member;
       highestCounter.addRole(HIGHEST_COUNTER_ROLE);
@@ -134,10 +171,13 @@ module.exports = {
     updateHighestCounterRole(); // Update role name if needed
 
     if (lastNumber % 5 === 0) saveFile(); // Save TOTAL_COUNTS every 5 messages
-    
+
     if (lastMessageTimeout) clearTimeout(lastMessageTimeout);
     lastMessageTimeout = setTimeout(() => {
-      if (lastMember && !lastMember.roles.find('name', LAST_COUNTER_ROLE.name)) {
+      if (
+        lastMember &&
+        !lastMember.roles.find('name', LAST_COUNTER_ROLE.name)
+      ) {
         LAST_COUNTER_ROLE.members.array().forEach(member => {
           member.removeRole(LAST_COUNTER_ROLE);
         });
@@ -145,15 +185,15 @@ module.exports = {
       }
 
       lastMessageTimeout = null;
-    }, 15*60*1000);
-  }
-}
+    }, 15 * 60 * 1000);
+  },
+};
 
 function updateNumber(num, member, msg) {
   lastNumber = parseInt(num);
   lastMember = member;
   if (lastNumber % 100 == 0) {
-    msg.channel.setName('counting-'+lastNumber);
+    msg.channel.setName('counting-' + lastNumber);
   }
 }
 
@@ -161,29 +201,33 @@ let currentlySaving = false;
 function saveFile() {
   if (currentlySaving) return;
   currentlySaving = true;
-  fs.writeFile(COUNTER_FILE, JSON.stringify(TOTAL_COUNTS), () => { currentlySaving = false; });
+  fs.writeFile(COUNTER_FILE, JSON.stringify(TOTAL_COUNTS), () => {
+    currentlySaving = false;
+  });
 }
 
 function updateHighestCounterRole() {
   const highestCount = TOTAL_COUNTS[highestCounter.user.id];
   if (highestCount % 100 === 0) {
-    HIGHEST_COUNTER_ROLE.setName(`Highest Counter (${(highestCount/1000).toFixed(1)}k)`)
+    HIGHEST_COUNTER_ROLE.setName(
+      `Highest Counter (${(highestCount / 1000).toFixed(1)}k)`,
+    );
   }
 }
 
-function reactDeleteMute(msg, length=0, emojis=[]) {
+function reactDeleteMute(msg, length = 0, emojis = []) {
   LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
   lastFiveIndex %= 5;
 
   for (let i = 0; i < emojis.length; i++) {
     setTimeout(() => {
       msg.react(emojis[i]).catch(err => console.error(err));
-    }, i*1200);
+    }, i * 1200);
   }
 
   setTimeout(() => {
     if (!msg.deleted) msg.delete().catch(err => console.error(err));
-  }, Math.max(500, emojis.length*1200));
+  }, Math.max(500, emojis.length * 1200));
 
   if (length) {
     msg.member.addRole(COUNTING_MUTE_ROLE);
