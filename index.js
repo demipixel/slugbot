@@ -366,6 +366,7 @@ function getClassEmbed(classData) {
   return {
     type: 'rich',
     color: '16040514', // #f4c242
+    title: classData.fullName,
     description: classData.description,
     fields: [
       {
