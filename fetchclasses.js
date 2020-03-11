@@ -103,11 +103,11 @@ function parseClass(classBody) {
     : 'Unknown';
 
   // Get name
-  classData.fullName = classBody.match(
+  const fullNameMatch = classBody.match(
     /<h2 style="margin:0px;">([^]+?)<\/h2>/,
-  )[1];
-  classData.fullName = classData.fullName
-    ? classData.fullName[1]
+  );
+  classData.fullName = fullNameMatch
+    ? fullNameMatch[1]
         .replace(/&nbsp;/g, ' ')
         .trim()
         .replace(/ +/g, ' ') || 'Unknown'
