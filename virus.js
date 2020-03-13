@@ -5,7 +5,7 @@ module.exports = {
 
   message: function(client, msg) {
     if (previousInfected[msg.channel.name] && !isInfected(msg.member)) {
-      if (Math.random() < 0.005) {
+      if (Math.random() < 0.01) {
         msg.member.addRole(
           client.guilds.first().roles.find(role => role.name === 'Infected'),
         );
