@@ -266,7 +266,7 @@ client.on('message', msg => {
       }
     }
   } else if (msg.content.indexOf('!class') == 0) {
-    if (msg.channel.name !== 'commands') {
+    if (msg.channel.id !== config.get('commandsChannel')) {
       msg.channel.send(
         'You can only use this in ' +
           client.channels.find('id', config.get('commandsChannel')),

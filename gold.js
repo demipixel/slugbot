@@ -10,7 +10,7 @@ const goldToBoard = {};
 module.exports = {
   ready: function(client) {
     const boardChannel = client.channels.find(
-      ch => ch.name === config.get('gold.board_channel'),
+      ch => ch.id === config.get('gold.board_channel_id'),
     );
 
     client.on('messageReactionAdd', msgReaction => {
