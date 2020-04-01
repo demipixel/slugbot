@@ -289,7 +289,7 @@ client.on('message', msg => {
     (classes.current[msg.content.slice(1)] ||
       classStrings[msg.content.slice(1).toLowerCase()])
   ) {
-    if (msg.channel.name != 'commands') {
+    if (msg.channel.id !== config.get('commandsChannel')) {
       msg.channel.send(
         'You can only use this in ' +
           client.channels.find('id', config.get('commandsChannel')),
