@@ -1,4 +1,5 @@
-const config = require('config');
+import * as Discord from 'discord.js';
+import * as config from 'config';
 
 const EMOJI_NAME = config.get('gold.emoji');
 const ADD_TO_BOARD = config.get('gold.add_to_board');
@@ -8,10 +9,10 @@ const MIN_TO_KEEP = config.get('gold.min_to_keep');
 const goldToBoard = {};
 
 module.exports = {
-  ready: function(client) {
-    const boardChannel = client.channels.find(
-      ch => ch.id === config.get('gold.board_channel_id'),
-    );
+  ready: function (client: Discord.Client) {
+    const boardChannel = client.channels.cache.get(
+      config.get('gold.board_channel_id'),
+    ) as Discord.TextChannel;
 
     client.on('messageReactionAdd', msgReaction => {
       if (msgReaction.emoji.name !== EMOJI_NAME) return;
@@ -20,7 +21,7 @@ module.exports = {
       if (msgReaction.count >= ADD_TO_BOARD) {
         if (!goldToBoard[msg.id]) {
           boardChannel
-            .send('', { embed: getBoardEmbed(msg, msgReaction.count) })
+            .send(getBoardEmbed(msg, msgReaction.count))
             .then(boardMessage => {
               goldToBoard[msg.id] = boardMessage;
             })
@@ -54,7 +55,7 @@ module.exports = {
         goldToBoard[msg.id].edit('', {
           embed: getBoardEmbed(
             msg,
-            msg.reactions.find(r => r.emoji.name === 'gold').count,
+            msg.reactions.cache.find(r => r.emoji.name === 'gold').count,
           ),
         });
       }
@@ -62,9 +63,12 @@ module.exports = {
   },
 };
 
-function getBoardEmbed(msg, count) {
+function getBoardEmbed(
+  msg: Discord.Message | Discord.PartialMessage,
+  count: number,
+) {
   const firstAttachment = msg.attachments.first();
-  return {
+  return new Discord.MessageEmbed({
     type: 'rich',
     color: '15970383', // #f3b04f
     timestamp: msg.createdAt,
@@ -72,7 +76,7 @@ function getBoardEmbed(msg, count) {
       msg.content.length > 1000
         ? msg.content.slice(0, 1000) + '...'
         : msg.content,
-    thumbnail: { url: msg.author.avatarURL },
+    thumbnail: { url: msg.author.avatarURL() },
     image:
       firstAttachment && firstAttachment.height !== undefined
         ? { url: firstAttachment.url }
@@ -84,5 +88,5 @@ function getBoardEmbed(msg, count) {
       },
     ],
     footer: { text: `${count} golds` },
-  };
+  });
 }

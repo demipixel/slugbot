@@ -1,4 +1,5 @@
-const fs = require('fs');
+import * as fs from 'fs';
+import * as Discord from 'discord.js';
 
 let COUNTING_MUTE_ROLE = null;
 let HIGHEST_COUNTER_ROLE = null;
@@ -18,16 +19,17 @@ let lastFiveIndex = 0;
 let lastMessageTimeout = null;
 
 module.exports = {
-  ready: function(client) {
-    COUNTING_MUTE_ROLE = client.guilds
-      .first()
-      .roles.find(role => role.name === 'Counting Mute');
-    HIGHEST_COUNTER_ROLE = client.guilds
-      .first()
-      .roles.find(role => role.name.startsWith('Highest Counter'));
-    LAST_COUNTER_ROLE = client.guilds
-      .first()
-      .roles.find(role => role.name === 'Last Counter');
+  ready: function (client: Discord.Client) {
+    const guild = client.guilds.cache.first();
+    COUNTING_MUTE_ROLE = guild.roles.cache.find(
+      role => role.name === 'Counting Mute',
+    );
+    HIGHEST_COUNTER_ROLE = guild.roles.cache.find(role =>
+      role.name.startsWith('Highest Counter'),
+    );
+    LAST_COUNTER_ROLE = guild.roles.cache.find(
+      role => role.name === 'Last Counter',
+    );
 
     // Remove anyone with mute role on startup
     COUNTING_MUTE_ROLE.members.array().forEach(member => {
@@ -41,19 +43,23 @@ module.exports = {
       if (
         !highestId ||
         (TOTAL_COUNTS[userId] > TOTAL_COUNTS[highestId] &&
-          client.guilds.first().members.find(member => member.id === userId))
+          guild.members.cache.find(member => member.id === userId))
       ) {
         highestId = userId;
       }
     });
-    highestCounter = client.guilds
-      .first()
-      .members.find(member => member.id === highestId);
+    highestCounter = guild.members.cache.find(
+      member => member.id === highestId,
+    );
     if (highestCounter) highestCounter.addRole(HIGHEST_COUNTER_ROLE);
 
     // Prevent user from deleting messages (fix if needed)
     client.on('messageDelete', msg => {
-      if (!msg.channel.name.startsWith('counting')) return;
+      if (
+        msg.channel.type !== 'text' ||
+        !msg.channel.name.startsWith('counting')
+      )
+        return;
 
       for (let i = 0; i < 5; i++) {
         if (LAST_FIVE_MESSAGES[i] && LAST_FIVE_MESSAGES[i].id == msg.id) return; // Deleted by bot
@@ -62,7 +68,7 @@ module.exports = {
       const numberMatch = msg.content.match(/^([1-9]\d*)/);
 
       if (numberMatch && parseInt(numberMatch[1]) == lastNumber)
-        msg.channel.sendMessage(numberMatch[1]);
+        msg.channel.send(numberMatch[1]);
       reactDeleteMute(msg, 30 * 1000);
       msg.member.user
         .send(
@@ -73,6 +79,7 @@ module.exports = {
 
     // Prevent users from editing messages (fix if needed)
     client.on('messageUpdate', (oldMsg, newMsg) => {
+      if (newMsg.channel.type !== 'text') return;
       if (!newMsg.channel.name.startsWith('counting')) return;
 
       const numberMatch = oldMsg.content.match(/^([1-9]\d*)/);
@@ -85,24 +92,27 @@ module.exports = {
       ) {
         reactDeleteMute(newMsg, 5000, ['🔢', '❓', '🚫']);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber)
-          oldMsg.channel.sendMessage(numberMatch[1]);
+          oldMsg.channel.send(numberMatch[1]);
       } else if (newMsg.content.length > 60) {
         reactDeleteMute(newMsg, 5000, ['6⃣', '0⃣', '🚫']);
         if (numberMatch && parseInt(numberMatch[1]) == lastNumber)
-          oldMsg.channel.sendMessage(numberMatch[1]);
+          oldMsg.channel.send(numberMatch[1]);
       }
     });
   },
-  message: function(client, msg) {
-    if (msg.content == '!highestcounter') {
+  message: function (client: Discord.Client, msg: Discord.Message) {
+    if (msg.channel.type !== 'text') {
+      return;
+    } else if (msg.content == '!highestcounter') {
       msg.channel.send(highestCounter.user.username);
       return;
     } else if (msg.content == '!counter') {
       reactDeleteMute(msg);
       msg.channel
         .send(
-          `Last number: ${lastNumber} from ${lastMember ||
-            'an admin (forced)'}`,
+          `Last number: ${lastNumber} from ${
+            lastMember || 'an admin (forced)'
+          }`,
         )
         .then(cmdMsg => {
           setTimeout(() => cmdMsg.delete(), 3000);
@@ -114,7 +124,7 @@ module.exports = {
 
     if (
       msg.content.match(/^!force \d+$/) &&
-      msg.member.roles.find(role => role.name === 'Moderator')
+      msg.member.roles.cache.find(role => role.name === 'Moderator')
     ) {
       const number = msg.content.match(/^!force (\d+)$/)[1];
       updateNumber(number, null, msg);
@@ -189,11 +199,11 @@ module.exports = {
   },
 };
 
-function updateNumber(num, member, msg) {
+function updateNumber(num, member: Discord.GuildMember, msg: Discord.Message) {
   lastNumber = parseInt(num);
   lastMember = member;
   if (lastNumber % 100 == 0) {
-    msg.channel.setName('counting-' + lastNumber);
+    (msg.channel as Discord.TextChannel).setName('counting-' + lastNumber);
   }
 }
 
@@ -215,7 +225,11 @@ function updateHighestCounterRole() {
   }
 }
 
-function reactDeleteMute(msg, length = 0, emojis = []) {
+function reactDeleteMute(
+  msg: Discord.Message | Discord.PartialMessage,
+  length = 0,
+  emojis = [],
+) {
   LAST_FIVE_MESSAGES[lastFiveIndex++] = msg;
   lastFiveIndex %= 5;
 
@@ -230,9 +244,9 @@ function reactDeleteMute(msg, length = 0, emojis = []) {
   }, Math.max(500, emojis.length * 1200));
 
   if (length) {
-    msg.member.addRole(COUNTING_MUTE_ROLE);
+    msg.member.roles.add(COUNTING_MUTE_ROLE);
     setTimeout(() => {
-      msg.member.removeRole(COUNTING_MUTE_ROLE);
+      msg.member.roles.remove(COUNTING_MUTE_ROLE);
     }, length);
   }
 }

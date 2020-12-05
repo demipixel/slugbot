@@ -6,7 +6,15 @@
 
   "classSearch": {
     "term": "2178",
-    "interval": 21600
+    "interval": 21600,
+    "previousQuarters": [
+      "fall18",
+      "winter19",
+      "spring",
+      "summer",
+      "fall19",
+      "winter20"
+    ]
   },
 
   "emojis": {

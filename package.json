@@ -14,5 +14,10 @@
     "md5": "^2.2.1",
     "node-emoji": "^1.8.1",
     "request": "^2.85.0"
+  },
+  "devDependencies": {
+    "@types/config": "0.0.37",
+    "@types/node": "^14.14.10",
+    "@types/node-emoji": "^1.8.1"
   }
 }

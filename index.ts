@@ -1,19 +1,19 @@
-const Discord = require('discord.js');
-const config = require('config');
-const fs = require('fs');
-const emojiLib = require('node-emoji');
+import * as Discord from 'discord.js';
+import * as config from 'config';
+import * as fs from 'fs';
+import * as emojiLib from 'node-emoji';
 const fetchclasses = require('./fetchclasses');
 const Cleverbot = require('./cleverbot');
 const EXTERNAL = [
-  require('./counting.js'),
-  require('./gold.js'),
-  require('./virus.js'),
+  require('./counting.ts'),
+  require('./gold.ts'),
+  // require('./virus.js'),
 ];
 
 const clever = new Cleverbot();
 const client = new Discord.Client();
 
-const classes = {};
+const classes: { [key: string]: any } = {};
 let classStrings = {};
 let lastUpdated = 0;
 
@@ -133,7 +133,7 @@ try {
   // Will fetch classes
 }
 
-config.get('classSearch.previousQuarters').forEach(classKey => {
+(config.get('classSearch.previousQuarters') as string[]).forEach(classKey => {
   if (fs.existsSync(`./classdata-${classKey}.json`)) {
     classes[classKey] = JSON.parse(
       fs.readFileSync(`./classdata-${classKey}.json`, 'utf8'),
@@ -141,6 +141,7 @@ config.get('classSearch.previousQuarters').forEach(classKey => {
   }
 });
 
+const classSearchInterval: number = config.get('classSearch.interval');
 setTimeout(() => {
   const gotClasses = returnedClasses => {
     classes.current = returnedClasses;
@@ -149,8 +150,8 @@ setTimeout(() => {
   fetchclasses(config.get('classSearch.term'), gotClasses);
   setInterval(() => {
     fetchclasses(config.get('classSearch.term'), gotClasses);
-  }, config.get('classSearch.interval') * 1000);
-}, Math.max(config.get('classSearch.interval') * 1000 - (Date.now() - lastUpdated), 0));
+  }, classSearchInterval * 1000);
+}, Math.max(classSearchInterval * 1000 - (Date.now() - lastUpdated), 0));
 
 function createClassStrings() {
   classStrings = {};
@@ -166,11 +167,7 @@ function createClassStrings() {
 
       classStrings[prefix + nameArr.join(' ').toLowerCase()] = classData;
       classStrings[
-        prefix +
-          nameArr
-            .join(' ')
-            .toLowerCase()
-            .replace(' -', '')
+        prefix + nameArr.join(' ').toLowerCase().replace(' -', '')
       ] = classData;
 
       if (parseInt(nameArr[3]) < 10) {
@@ -190,12 +187,13 @@ createClassStrings();
 let selectorMessages = null;
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
-  client.channels
-    .find(channel => channel.id === config.get('classSelectorChannel'))
-    .fetchMessages({ limit: 100 });
-  client.channels
-    .find(channel => channel.id === config.get('selectorChannel'))
-    .fetchMessages({ limit: 100 })
+  (client.channels.cache.find(
+    channel => channel.id === config.get('classSelectorChannel'),
+  ) as Discord.TextChannel).messages.fetch({ limit: 100 });
+  (client.channels.cache.find(
+    channel => channel.id === config.get('selectorChannel'),
+  ) as Discord.TextChannel).messages
+    .fetch({ limit: 100 })
     .then(messages => {
       console.log('Got selectorChannel messages!');
       selectorMessages = messages;
@@ -205,15 +203,14 @@ client.on('ready', () => {
     })
     .catch(e => console.log('Error getting selectorChannel messages', e));
 
-  const guild = client.channels.find(
-    channel => channel.id === config.get('selectorChannel'),
-  ).guild;
   Object.values(MAJORS).forEach(major => {
-    const guild = client.guilds.first();
-    if (!guild.roles.find(role => role.name === major)) {
-      guild
-        .createRole({
-          name: major,
+    const guild = client.guilds.cache.first();
+    if (!guild.roles.cache.find(role => role.name === major)) {
+      guild.roles
+        .create({
+          data: {
+            name: major,
+          },
         })
         .then(role => console.log(`Created ${role.name} major role.`))
         .catch(err => console.error('Could not create role for ' + major, err));
@@ -237,7 +234,9 @@ client.on('message', msg => {
 
   if (
     msg.content == '!majors' &&
-    msg.member.roles.find('name', config.get('adminRoleName'))
+    msg.member.roles.cache.find(
+      role => role.name === config.get('adminRoleName'),
+    )
   ) {
     let str =
       'In order to assign yourself a major role, type your major code below (e.g. `cmps`). Major codes can be found at:\n';
@@ -247,10 +246,15 @@ client.on('message', msg => {
     msg.channel.send(str);
   } else if (
     msg.channel.id == config.get('selectorChannel') &&
-    !msg.member.roles.find('name', config.get('adminRoleName'))
+    !msg.member.roles.cache.find(r => r.name === config.get('adminRoleName'))
   ) {
     const major = MAJORS[msg.content.replace('rm ', '').toUpperCase()];
-    if (!major && !msg.member.roles.find('name', config.get('adminRoleName'))) {
+    if (
+      !major &&
+      !msg.member.roles.cache.find(
+        role => role.name === config.get('adminRoleName'),
+      )
+    ) {
       msg.delete();
       msg.author.send(
         `"${msg.content.replace('rm ', '')}" is not a valid major!`,
@@ -258,10 +262,12 @@ client.on('message', msg => {
     } else if (major) {
       setTimeout(() => msg.delete(), 500);
       if (msg.content.startsWith('rm')) {
-        msg.member.removeRole(msg.guild.roles.find('name', major));
+        msg.member.roles.remove(
+          msg.guild.roles.cache.find(r => r.name === major),
+        );
         msg.author.send(`Successfully removed "${major}"`);
       } else {
-        msg.member.addRole(msg.guild.roles.find('name', major));
+        msg.member.roles.add(msg.guild.roles.cache.find(r => r.name === major));
         msg.author.send(`Successfully added "${major}"`);
       }
     }
@@ -269,7 +275,7 @@ client.on('message', msg => {
     if (msg.channel.id !== config.get('commandsChannel')) {
       msg.channel.send(
         'You can only use this in ' +
-          client.channels.find('id', config.get('commandsChannel')),
+          client.channels.cache.get(config.get('commandsChannel')),
       );
       return;
     }
@@ -292,7 +298,7 @@ client.on('message', msg => {
     if (msg.channel.id !== config.get('commandsChannel')) {
       msg.channel.send(
         'You can only use this in ' +
-          client.channels.find('id', config.get('commandsChannel')),
+          client.channels.cache.get(config.get('commandsChannel')),
       );
       return;
     }
@@ -322,7 +328,8 @@ client.on('message', msg => {
     message += Object.keys(config.get('emojis')[selectorType])
       .map(emoji => {
         return (
-          (msg.guild.emojis.find('name', emoji) || ':' + emoji + ':') +
+          (msg.guild.emojis.cache.find(e => e.name === emoji) ||
+            ':' + emoji + ':') +
           ' ' +
           config.get('emojis')[selectorType][emoji]
         );
@@ -334,7 +341,7 @@ client.on('message', msg => {
         Object.keys(config.get('emojis')[selectorType]).forEach(
           (emoji, index) => {
             const emote =
-              msg.guild.emojis.find('name', emoji) ||
+              msg.guild.emojis.cache.find(e => e.name === emoji) ||
               EMOJI_MAPPING[emoji] ||
               emojiLib.get(emoji);
             setTimeout(() => msgObj.react(emote), index * 500);
@@ -342,7 +349,9 @@ client.on('message', msg => {
         );
         if (
           !match[2] ||
-          !msg.member.roles.find('name', config.get('adminRoleName'))
+          !msg.member.roles.cache.find(
+            r => r.name === config.get('adminRoleName'),
+          )
         )
           setTimeout(
             () => msgObj.react('🗑'),
@@ -354,6 +363,7 @@ client.on('message', msg => {
       });
   } else if (
     msg.mentions.users.find(user => user.id == client.user.id) &&
+    msg.channel.type === 'text' &&
     !msg.channel.name.startsWith('counting')
   ) {
     clever.send(msg.content.replace(client.user.toString(), '').trim(), str => {
@@ -423,14 +433,14 @@ client.on('messageReactionAdd', (reactionObj, user) => {
 
   if (roleName) {
     const allRoles = Object.values(emojiToRole);
-    reactionObj.message.guild
-      .fetchMember(user)
+    reactionObj.message.guild.members
+      .fetch({ user: user.id })
       .then(member => {
-        setTimeout(() => reactionObj.remove(user), 200);
+        setTimeout(() => reactionObj.users.remove(user.id), 200);
 
-        if (member.roles.find('name', roleName)) {
-          member.removeRoles(
-            member.roles.filterArray(role => role.name == roleName),
+        if (member.roles.cache.find(r => r.name === roleName)) {
+          member.roles.remove(
+            member.roles.cache.filter(role => role.name == roleName),
           );
           user.send('Removed role.');
           return;
@@ -438,17 +448,16 @@ client.on('messageReactionAdd', (reactionObj, user) => {
 
         if (type != 'classes') {
           // Remove roles relating to message
-          member.removeRoles(
-            member.roles.filterArray(role => allRoles.includes(role.name)),
+          member.roles.remove(
+            member.roles.cache.filter(role => allRoles.includes(role.name)),
           );
         }
-        const roleToAdd = reactionObj.message.guild.roles.find(
-          'name',
-          roleName,
+        const roleToAdd = reactionObj.message.guild.roles.cache.find(
+          r => r.name === roleName,
         );
         setTimeout(() => {
-          member
-            .addRole(roleToAdd)
+          member.roles
+            .add(roleToAdd)
             .then(() => user.send('Successfully added role ' + roleName))
             .catch(
               err =>
@@ -473,7 +482,7 @@ client.on('messageReactionRemove', (reactionObj, user) => {
 
   if (roleName) {
     reactionObj.message.guild.fetchMember(user).then(member => {
-      member.removeRole(reactionObj.message.guild.roles.find('name', roleName));
+      member.removeRole(reactionObj.message.guild.roles.cache.find(r => r.name === roleName));
     }).catch(err => {
       console.log(err);
       user.send('There was an error getting your member object! Could not change roles.');
