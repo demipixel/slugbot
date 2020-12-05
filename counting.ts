@@ -56,7 +56,14 @@ module.exports = {
     if (highestCounter) await highestCounter.roles.add(HIGHEST_COUNTER_ROLE);
 
     // Prevent user from deleting messages (fix if needed)
-    client.on('messageDelete', async msg => {
+    client.on('messageDelete', msg =>
+      onMessageDelete(msg).catch(err =>
+        console.error('Error handling counting message delete', err),
+      ),
+    );
+    async function onMessageDelete(
+      msg: Discord.Message | Discord.PartialMessage,
+    ) {
       if (
         msg.channel.type !== 'text' ||
         !msg.channel.name.startsWith('counting')
@@ -79,10 +86,18 @@ module.exports = {
           'Do not delete your messages! You have been muted for 30 seconds.',
         )
         .catch(err => console.error(err));
-    });
+    }
 
     // Prevent users from editing messages (fix if needed)
-    client.on('messageUpdate', async (oldMsg, newMsg) => {
+    client.on('messageUpdate', (oldMsg, newMsg) =>
+      onMessageUpdate(oldMsg, newMsg).catch(err =>
+        console.error('Error handling counting message update', err),
+      ),
+    );
+    async function onMessageUpdate(
+      oldMsg: Discord.Message | Discord.PartialMessage,
+      newMsg: Discord.Message | Discord.PartialMessage,
+    ) {
       if (newMsg.channel.type !== 'text') return;
       if (!newMsg.channel.name.startsWith('counting')) return;
 
@@ -102,7 +117,7 @@ module.exports = {
         if (numberMatch && parseInt(numberMatch[1], 10) === lastNumber)
           await oldMsg.channel.send(numberMatch[1]);
       }
-    });
+    }
   },
   message: async (client: Discord.Client, msg: Discord.Message) => {
     if (msg.channel.type !== 'text') {

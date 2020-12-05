@@ -190,22 +190,28 @@ function createClassStrings() {
 
 createClassStrings();
 
-let selectorMessages = null;
-client.on('ready', async () => {
+client.on('ready', () =>
+  clientReady().catch(err => console.error('Error on ready', err)),
+);
+
+async function clientReady() {
   console.log(`Logged in as ${client.user.tag}`);
-  await (client.channels.cache.find(
-    channel => channel.id === config.get('classSelectorChannel'),
-  ) as Discord.TextChannel).messages.fetch({ limit: 100 });
+  // await (client.channels.cache.find(
+  //   channel => channel.id === config.get('classSelectorChannel'),
+  // ) as Discord.TextChannel).messages.fetch({ limit: 100 });
   (client.channels.cache.find(
     channel => channel.id === config.get('selectorChannel'),
   ) as Discord.TextChannel).messages
     .fetch({ limit: 100 })
     .then(messages => {
       console.log('Got selectorChannel messages!');
-      selectorMessages = messages;
-      messages
-        .filter(m => m.author.id !== client.user.id)
-        .forEach(m => m.delete());
+      Promise.all(
+        messages
+          .filter(m => m.author.id !== client.user.id)
+          .map(m => m.delete()),
+      ).catch(err =>
+        console.error('Error deleting selector channel messages', err),
+      );
     })
     .catch(e => console.log('Error getting selectorChannel messages', e));
 
@@ -229,9 +235,13 @@ client.on('ready', async () => {
         console.error('Error setting up external ' + index, err),
       );
   });
-});
+}
 
-client.on('message', async msg => {
+client.on('message', msg =>
+  onMessage(msg).catch(err => console.error('Error on message', err)),
+);
+
+async function onMessage(msg: Discord.Message) {
   console.log(msg.author + ': ' + msg.content);
   if (msg.author.id === client.user.id) return;
   else if (!msg.member) return;
@@ -391,7 +401,7 @@ client.on('message', async msg => {
         console.error('Error setting up external ' + index, err),
       );
   });
-});
+}
 
 function getClassEmbed(classData) {
   return {
@@ -436,7 +446,13 @@ function getClassEmbed(classData) {
   };
 }
 
-client.on('messageReactionAdd', async (reactionObj, user) => {
+client.on('messageReactionAdd', (reactionObj, user) =>
+  onMessageReactionAdd(reactionObj, user),
+);
+async function onMessageReactionAdd(
+  reactionObj: Discord.MessageReaction,
+  user: Discord.User | Discord.PartialUser,
+) {
   if (!reactionObj.message.guild) return;
   if (user === client.user) return;
 
@@ -497,23 +513,23 @@ client.on('messageReactionAdd', async (reactionObj, user) => {
           .catch(() => false);
       });
   }
-});
+}
 
-client.on('messageReactionRemove', (reactionObj, user) => {
-  if (!reactionObj.message.guild) return;
-  if (user === client.user) return;
-  /*const {roleName, type} = getRoleFromReaction(reactionObj);
-  const emojiToRole = config.get('emojis')[type];
+// client.on('messageReactionRemove', (reactionObj, user) => {
+//   if (!reactionObj.message.guild) return;
+//   if (user === client.user) return;
+//   /*const {roleName, type} = getRoleFromReaction(reactionObj);
+//   const emojiToRole = config.get('emojis')[type];
 
-  if (roleName) {
-    reactionObj.message.guild.fetchMember(user).then(member => {
-      member.removeRole(reactionObj.message.guild.roles.cache.find(r => r.name === roleName));
-    }).catch(err => {
-      console.log(err);
-      user.send('There was an error getting your member object! Could not change roles.');
-    });
-  }*/
-});
+//   if (roleName) {
+//     reactionObj.message.guild.fetchMember(user).then(member => {
+//       member.removeRole(reactionObj.message.guild.roles.cache.find(r => r.name === roleName));
+//     }).catch(err => {
+//       console.log(err);
+//       user.send('There was an error getting your member object! Could not change roles.');
+//     });
+//   }*/
+// });
 
 function getRoleFromReaction(reactionObj) {
   const emojiSelectors = config.get('messages.emojiSelectors');

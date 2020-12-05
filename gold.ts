@@ -9,7 +9,7 @@ const MIN_TO_KEEP = config.get('gold.min_to_keep');
 const goldToBoard = {};
 
 module.exports = {
-  ready: (client: Discord.Client) => {
+  ready: async (client: Discord.Client) => {
     const boardChannel = client.channels.cache.get(
       config.get('gold.board_channel_id'),
     ) as Discord.TextChannel;
