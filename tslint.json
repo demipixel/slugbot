@@ -1,0 +1,40 @@
+{
+  "defaultSeverity": "error",
+  "linterOptions": {
+    "exclude": ["**/*.spec.ts"]
+  },
+  "extends": ["tslint:recommended"],
+  "jsRules": {
+    "no-unused-expression": true
+  },
+  "rules": {
+    "quotemark": [true, "single", "avoid-escape"],
+    "member-access": [false],
+    "array-type": [true, "array"],
+    "ordered-imports": [false],
+    "max-line-length": [true, 150],
+    "member-ordering": [false],
+    "interface-name": [false],
+    "arrow-parens": false,
+    "object-literal-sort-keys": false,
+    "object-literal-key-quotes": [true, "as-needed"],
+    "no-floating-promises": true,
+    "await-promise": true,
+    "no-promise-as-boolean": true,
+    "no-return-await": true,
+    "no-string-literal": false,
+    "cyclomatic-complexity": false,
+    "no-tautology-expression": true,
+    "promise-function-async": true,
+    "no-console": false,
+    "no-var-requires": false,
+    "variable-name": {
+      "options": [
+        "ban-keywords",
+        "check-format",
+        "allow-snake-case",
+        "allow-pascal-case"
+      ]
+    }
+  }
+}

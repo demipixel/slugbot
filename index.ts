@@ -4,7 +4,10 @@ import * as fs from 'fs';
 import * as emojiLib from 'node-emoji';
 const fetchclasses = require('./fetchclasses');
 const Cleverbot = require('./cleverbot');
-const EXTERNAL = [
+const EXTERNAL: {
+  ready: (client: Discord.Client) => unknown;
+  message: (client: Discord.Client, message: Discord.Message) => unknown;
+}[] = [
   require('./counting.ts'),
   require('./gold.ts'),
   // require('./virus.js'),
@@ -158,7 +161,7 @@ function createClassStrings() {
   Object.keys(classes).forEach(quarter => {
     Object.keys(classes[quarter]).forEach(classId => {
       const classData = classes[quarter][classId];
-      const prefix = quarter == 'current' ? '' : quarter + ' ';
+      const prefix = quarter === 'current' ? '' : quarter + ' ';
       if (!classData.name)
         return console.log('Could not find name for class', classData);
       if (!classStrings[prefix + classData.name.toLowerCase()])
@@ -170,7 +173,7 @@ function createClassStrings() {
         prefix + nameArr.join(' ').toLowerCase().replace(' -', '')
       ] = classData;
 
-      if (parseInt(nameArr[3]) < 10) {
+      if (parseInt(nameArr[3], 10) < 10) {
         classStrings[
           prefix + classData.name.toLowerCase() + ' - ' + nameArr[3].slice(1)
         ] = classData;
@@ -185,9 +188,9 @@ function createClassStrings() {
 createClassStrings();
 
 let selectorMessages = null;
-client.on('ready', () => {
+client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
-  (client.channels.cache.find(
+  await (client.channels.cache.find(
     channel => channel.id === config.get('classSelectorChannel'),
   ) as Discord.TextChannel).messages.fetch({ limit: 100 });
   (client.channels.cache.find(
@@ -198,7 +201,7 @@ client.on('ready', () => {
       console.log('Got selectorChannel messages!');
       selectorMessages = messages;
       messages
-        .filter(m => m.author.id != client.user.id)
+        .filter(m => m.author.id !== client.user.id)
         .forEach(m => m.delete());
     })
     .catch(e => console.log('Error getting selectorChannel messages', e));
@@ -222,9 +225,9 @@ client.on('ready', () => {
   });
 });
 
-client.on('message', msg => {
+client.on('message', async msg => {
   console.log(msg.author + ': ' + msg.content);
-  if (msg.author.id == client.user.id) return;
+  if (msg.author.id === client.user.id) return;
   else if (!msg.member) return;
 
   /*if (msg.content.includes(':thinking:') || msg.content.includes('🤔')) {
@@ -233,7 +236,7 @@ client.on('message', msg => {
   }*/
 
   if (
-    msg.content == '!majors' &&
+    msg.content === '!majors' &&
     msg.member.roles.cache.find(
       role => role.name === config.get('adminRoleName'),
     )
@@ -243,9 +246,9 @@ client.on('message', msg => {
     str +=
       'https://registrar.ucsc.edu/navigator/section3/declaring/majors-list.html\n';
     str += 'To remove a major, begin your message with "rm" (e.g. `rm cmps`)';
-    msg.channel.send(str);
+    await msg.channel.send(str);
   } else if (
-    msg.channel.id == config.get('selectorChannel') &&
+    msg.channel.id === config.get('selectorChannel') &&
     !msg.member.roles.cache.find(r => r.name === config.get('adminRoleName'))
   ) {
     const major = MAJORS[msg.content.replace('rm ', '').toUpperCase()];
@@ -255,25 +258,27 @@ client.on('message', msg => {
         role => role.name === config.get('adminRoleName'),
       )
     ) {
-      msg.delete();
-      msg.author.send(
+      await msg.delete();
+      await msg.author.send(
         `"${msg.content.replace('rm ', '')}" is not a valid major!`,
       );
     } else if (major) {
       setTimeout(() => msg.delete(), 500);
       if (msg.content.startsWith('rm')) {
-        msg.member.roles.remove(
+        await msg.member.roles.remove(
           msg.guild.roles.cache.find(r => r.name === major),
         );
-        msg.author.send(`Successfully removed "${major}"`);
+        await msg.author.send(`Successfully removed "${major}"`);
       } else {
-        msg.member.roles.add(msg.guild.roles.cache.find(r => r.name === major));
-        msg.author.send(`Successfully added "${major}"`);
+        await msg.member.roles.add(
+          msg.guild.roles.cache.find(r => r.name === major),
+        );
+        await msg.author.send(`Successfully added "${major}"`);
       }
     }
-  } else if (msg.content.indexOf('!class') == 0) {
+  } else if (msg.content.indexOf('!class') === 0) {
     if (msg.channel.id !== config.get('commandsChannel')) {
-      msg.channel.send(
+      await msg.channel.send(
         'You can only use this in ' +
           client.channels.cache.get(config.get('commandsChannel')),
       );
@@ -287,16 +292,16 @@ client.on('message', msg => {
       );
     const classData =
       classes.current[match[1]] || classStrings[match[1].toLowerCase()];
-    if (!classData) msg.reply(`Could not find that class!`);
-    else msg.channel.send('', { embed: getClassEmbed(classData) });
+    if (!classData) await msg.reply(`Could not find that class!`);
+    else await msg.channel.send('', { embed: getClassEmbed(classData) });
   } else if (
     classes.current &&
-    msg.content[0] == '!' &&
+    msg.content[0] === '!' &&
     (classes.current[msg.content.slice(1)] ||
       classStrings[msg.content.slice(1).toLowerCase()])
   ) {
     if (msg.channel.id !== config.get('commandsChannel')) {
-      msg.channel.send(
+      await msg.channel.send(
         'You can only use this in ' +
           client.channels.cache.get(config.get('commandsChannel')),
       );
@@ -306,18 +311,18 @@ client.on('message', msg => {
     const classData =
       classes.current[msg.content.slice(1)] ||
       classStrings[msg.content.slice(1).toLowerCase()];
-    msg.channel.send('', { embed: getClassEmbed(classData) });
-  } else if (msg.content == '!github') {
-    msg.reply('https://github.com/demipixel/slugbot');
+    await msg.channel.send('', { embed: getClassEmbed(classData) });
+  } else if (msg.content === '!github') {
+    await msg.reply('https://github.com/demipixel/slugbot');
   } else if (msg.content.startsWith('!haha ')) {
     const str = msg.content.slice(6);
     const funky = str
       .split('')
-      .map((c, i) => (i % 2 == 0 ? c.toLowerCase() : c.toUpperCase()))
+      .map((c, i) => (i % 2 === 0 ? c.toLowerCase() : c.toUpperCase()))
       .join('');
-    msg.delete();
-    msg.channel.send(funky);
-  } else if (msg.content.indexOf('!selector') == 0) {
+    await msg.delete();
+    await msg.channel.send(funky);
+  } else if (msg.content.indexOf('!selector') === 0) {
     const match = msg.content.match(/!selector ([^ ]+)( forever)?/);
     if (!match)
       return msg.reply('Invalid usage! Try `!selector <name of selector>`');
@@ -362,12 +367,15 @@ client.on('message', msg => {
         console.log('Error sending message', err);
       });
   } else if (
-    msg.mentions.users.find(user => user.id == client.user.id) &&
+    msg.mentions.users.find(user => user.id === client.user.id) &&
     msg.channel.type === 'text' &&
     !msg.channel.name.startsWith('counting')
   ) {
     clever.send(msg.content.replace(client.user.toString(), '').trim(), str => {
-      if (str) msg.reply(str.replace(/\*/g, '\\*'));
+      if (str)
+        msg
+          .reply(str.replace(/\*/g, '\\*'))
+          .catch(err => console.error('Error sending cleverbot response', err));
     });
   }
 
@@ -419,12 +427,12 @@ function getClassEmbed(classData) {
   };
 }
 
-client.on('messageReactionAdd', (reactionObj, user) => {
+client.on('messageReactionAdd', async (reactionObj, user) => {
   if (!reactionObj.message.guild) return;
-  if (user == client.user) return;
+  if (user === client.user) return;
 
-  if (reactionObj.emoji.name == '🗑' && reactionObj.me) {
-    reactionObj.message.delete();
+  if (reactionObj.emoji.name === '🗑' && reactionObj.me) {
+    await reactionObj.message.delete();
     return;
   }
 
@@ -435,20 +443,26 @@ client.on('messageReactionAdd', (reactionObj, user) => {
     const allRoles = Object.values(emojiToRole);
     reactionObj.message.guild.members
       .fetch({ user: user.id })
-      .then(member => {
-        setTimeout(() => reactionObj.users.remove(user.id), 200);
+      .then(async member => {
+        setTimeout(
+          () =>
+            reactionObj.users
+              .remove(user.id)
+              .catch(err => console.error('Error removing user reaction', err)),
+          200,
+        );
 
         if (member.roles.cache.find(r => r.name === roleName)) {
-          member.roles.remove(
-            member.roles.cache.filter(role => role.name == roleName),
+          await member.roles.remove(
+            member.roles.cache.filter(role => role.name === roleName),
           );
-          user.send('Removed role.');
+          await user.send('Removed role.');
           return;
         }
 
-        if (type != 'classes') {
+        if (type !== 'classes') {
           // Remove roles relating to message
-          member.roles.remove(
+          await member.roles.remove(
             member.roles.cache.filter(role => allRoles.includes(role.name)),
           );
         }
@@ -459,24 +473,26 @@ client.on('messageReactionAdd', (reactionObj, user) => {
           member.roles
             .add(roleToAdd)
             .then(() => user.send('Successfully added role ' + roleName))
-            .catch(
-              err =>
-                user.send('Failed to add role ' + roleName) && console.log(err),
-            );
+            .catch(async err => {
+              console.log(err);
+              user.send('Failed to add role ' + roleName).catch(() => false);
+            });
         }, 100);
       })
       .catch(err => {
         console.log(err);
-        user.send(
-          'There was an error getting your member object! Could not change roles.',
-        );
+        user
+          .send(
+            'There was an error getting your member object! Could not change roles.',
+          )
+          .catch(() => false);
       });
   }
 });
 
 client.on('messageReactionRemove', (reactionObj, user) => {
   if (!reactionObj.message.guild) return;
-  if (user == client.user) return;
+  if (user === client.user) return;
   /*const {roleName, type} = getRoleFromReaction(reactionObj);
   const emojiToRole = config.get('emojis')[type];
 
@@ -497,8 +513,8 @@ function getRoleFromReaction(reactionObj) {
   for (let i = 0; i < emojiSelectorKeys.length; i++) {
     const key = emojiSelectorKeys[i];
     const text = emojiSelectors[key];
-    if (reactionObj.message.content.slice(0, text.length) == text) {
-      let name = emojiNameToSymbol(reactionObj.emoji.name);
+    if (reactionObj.message.content.slice(0, text.length) === text) {
+      const name = emojiNameToSymbol(reactionObj.emoji.name);
       return { roleName: config.get('emojis')[key][name], type: key };
     }
   }
@@ -512,4 +528,6 @@ function emojiNameToSymbol(str) {
     : str;
 }
 
-client.login(config.get('discord.token'));
+client
+  .login(config.get('discord.token'))
+  .catch(err => console.error('Error logging in to Discord.js', err));
