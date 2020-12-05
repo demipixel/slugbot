@@ -404,9 +404,9 @@ async function onMessage(msg: Discord.Message) {
 }
 
 function getClassEmbed(classData) {
-  return {
+  return new Discord.MessageEmbed({
     type: 'rich',
-    color: '16040514', // #f4c242
+    hexColor: '#f4c242',
     title: classData.fullName,
     description: classData.description,
     fields: [
@@ -443,7 +443,7 @@ function getClassEmbed(classData) {
       { name: 'Notes', value: classData.notes || 'None' },
     ],
     footer: { text: 'Information from http://pisa.ucsc.edu/class_search/' },
-  };
+  });
 }
 
 client.on('messageReactionAdd', (reactionObj, user) =>
