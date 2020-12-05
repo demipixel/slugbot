@@ -5,8 +5,11 @@ import * as emojiLib from 'node-emoji';
 const fetchclasses = require('./fetchclasses');
 const Cleverbot = require('./cleverbot');
 const EXTERNAL: {
-  ready: (client: Discord.Client) => unknown;
-  message: (client: Discord.Client, message: Discord.Message) => unknown;
+  ready: (client: Discord.Client) => Promise<unknown>;
+  message: (
+    client: Discord.Client,
+    message: Discord.Message,
+  ) => Promise<unknown>;
 }[] = [
   require('./counting.ts'),
   require('./gold.ts'),
@@ -220,8 +223,11 @@ client.on('ready', async () => {
     }
   });
 
-  EXTERNAL.forEach(e => {
-    if (e.ready) e.ready(client);
+  EXTERNAL.forEach((e, index) => {
+    if (e.ready)
+      e.ready(client).catch(err =>
+        console.error('Error setting up external ' + index, err),
+      );
   });
 });
 
@@ -379,8 +385,11 @@ client.on('message', async msg => {
     });
   }
 
-  EXTERNAL.forEach(e => {
-    if (e.message) e.message(client, msg);
+  EXTERNAL.forEach((e, index) => {
+    if (e.message)
+      e.message(client, msg).catch(err =>
+        console.error('Error setting up external ' + index, err),
+      );
   });
 });
 
