@@ -349,7 +349,7 @@ async function onMessage(msg: Discord.Message) {
     message += Object.keys(config.get('emojis')[selectorType])
       .map(emoji => {
         return (
-          (msg.guild.emojis.cache.find(e => e.name === emoji) ||
+          (msg.guild.emojis.cache.find(e => e.name === emoji)?.toString() ||
             ':' + emoji + ':') +
           ' ' +
           config.get('emojis')[selectorType][emoji]
