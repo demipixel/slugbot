@@ -1,5 +1,5 @@
-import * as Discord from 'discord.js';
 import * as config from 'config';
+import * as Discord from 'discord.js';
 
 const EMOJI_NAME = config.get('gold.emoji');
 const ADD_TO_BOARD = config.get('gold.add_to_board');
@@ -21,7 +21,7 @@ module.exports = {
       if (msgReaction.count >= ADD_TO_BOARD) {
         if (!goldToBoard[msg.id]) {
           boardChannel
-            .send(getBoardEmbed(msg, msgReaction.count))
+            .send({ embeds: [getBoardEmbed(msg, msgReaction.count)] })
             .then(boardMessage => {
               goldToBoard[msg.id] = boardMessage;
             })
@@ -70,7 +70,7 @@ function getBoardEmbed(
   const firstAttachment = msg.attachments.first();
   return new Discord.MessageEmbed({
     type: 'rich',
-    color: '15970383', // #f3b04f
+    color: 15970383, // #f3b04f
     timestamp: msg.createdAt,
     description:
       msg.content.length > 1000

@@ -1,5 +1,5 @@
-import * as fs from 'fs';
 import * as Discord from 'discord.js';
+import * as fs from 'fs';
 
 let COUNTING_MUTE_ROLE: Discord.Role = null;
 let HIGHEST_COUNTER_ROLE: Discord.Role = null;
@@ -33,9 +33,9 @@ module.exports = {
 
     // Remove anyone with mute role on startup
     await Promise.all(
-      COUNTING_MUTE_ROLE.members
-        .array()
-        .map(member => member.roles.remove(COUNTING_MUTE_ROLE)),
+      [...COUNTING_MUTE_ROLE.members.values()].map(member =>
+        member.roles.remove(COUNTING_MUTE_ROLE),
+      ),
     );
 
     TOTAL_COUNTS = JSON.parse(fs.readFileSync(COUNTER_FILE, 'utf8'));
@@ -65,7 +65,7 @@ module.exports = {
       msg: Discord.Message | Discord.PartialMessage,
     ) {
       if (
-        msg.channel.type !== 'text' ||
+        msg.channel.type !== 'GUILD_TEXT' ||
         !msg.channel.name.startsWith('counting')
       )
         return;
@@ -98,7 +98,7 @@ module.exports = {
       oldMsg: Discord.Message | Discord.PartialMessage,
       newMsg: Discord.Message | Discord.PartialMessage,
     ) {
-      if (newMsg.channel.type !== 'text') return;
+      if (newMsg.channel.type !== 'GUILD_TEXT') return;
       if (!newMsg.channel.name.startsWith('counting')) return;
 
       const numberMatch = oldMsg.content.match(/^([1-9]\d*)/);
@@ -120,7 +120,7 @@ module.exports = {
     }
   },
   message: async (client: Discord.Client, msg: Discord.Message) => {
-    if (msg.channel.type !== 'text') {
+    if (msg.channel.type !== 'GUILD_TEXT') {
       return;
     } else if (msg.content === '!highestcounter') {
       await msg.channel.send(highestCounter.user.username);
@@ -212,9 +212,9 @@ module.exports = {
         !lastMember.roles.cache.find(r => r.name === LAST_COUNTER_ROLE.name)
       ) {
         Promise.all(
-          LAST_COUNTER_ROLE.members
-            .array()
-            .map(member => member.roles.remove(LAST_COUNTER_ROLE)),
+          [...LAST_COUNTER_ROLE.members.values()].map(member =>
+            member.roles.remove(LAST_COUNTER_ROLE),
+          ),
         )
           .catch(err => console.error('Error removing last counter roles', err))
           .finally(() => lastMember.roles.add(LAST_COUNTER_ROLE))

@@ -1,7 +1,8 @@
-import * as Discord from 'discord.js';
 import * as config from 'config';
+import * as Discord from 'discord.js';
 import * as fs from 'fs';
 import * as emojiLib from 'node-emoji';
+
 const fetchclasses = require('./fetchclasses');
 const Cleverbot = require('./cleverbot');
 const EXTERNAL: {
@@ -17,7 +18,13 @@ const EXTERNAL: {
 ];
 
 const clever = new Cleverbot();
-const client = new Discord.Client();
+const client = new Discord.Client({
+  intents: [
+    Discord.Intents.FLAGS.GUILD_MEMBERS,
+    Discord.Intents.FLAGS.GUILD_MESSAGES,
+    Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+  ],
+});
 
 const classes: { [key: string]: any } = {};
 let classStrings = {};
@@ -172,9 +179,8 @@ function createClassStrings() {
       const nameArr = classData.fullName.split(' ').slice(0, 4);
 
       classStrings[prefix + nameArr.join(' ').toLowerCase()] = classData;
-      classStrings[
-        prefix + nameArr.join(' ').toLowerCase().replace(' -', '')
-      ] = classData;
+      classStrings[prefix + nameArr.join(' ').toLowerCase().replace(' -', '')] =
+        classData;
 
       if (parseInt(nameArr[3], 10) < 10) {
         classStrings[
@@ -199,9 +205,11 @@ async function clientReady() {
   // await (client.channels.cache.find(
   //   channel => channel.id === config.get('classSelectorChannel'),
   // ) as Discord.TextChannel).messages.fetch({ limit: 100 });
-  (client.channels.cache.find(
-    channel => channel.id === config.get('selectorChannel'),
-  ) as Discord.TextChannel).messages
+  (
+    client.channels.cache.find(
+      channel => channel.id === config.get('selectorChannel'),
+    ) as Discord.TextChannel
+  )?.messages
     .fetch({ limit: 100 })
     .then(messages => {
       console.log('Got selectorChannel messages!');
@@ -215,14 +223,15 @@ async function clientReady() {
     })
     .catch(e => console.log('Error getting selectorChannel messages', e));
 
+  const guild = client.guilds.cache.first();
+
+  await guild.roles.fetch();
+
   Object.values(MAJORS).forEach(major => {
-    const guild = client.guilds.cache.first();
     if (!guild.roles.cache.find(role => role.name === major)) {
       guild.roles
         .create({
-          data: {
-            name: major,
-          },
+          name: major,
         })
         .then(role => console.log(`Created ${role.name} major role.`))
         .catch(err => console.error('Could not create role for ' + major, err));
@@ -237,9 +246,9 @@ async function clientReady() {
   });
 }
 
-client.on('message', msg =>
-  onMessage(msg).catch(err => console.error('Error on message', err)),
-);
+client.on('message', msg => {
+  onMessage(msg).catch(err => console.error('Error on message', err));
+});
 
 async function onMessage(msg: Discord.Message) {
   console.log(msg.author + ': ' + msg.content);
@@ -309,7 +318,7 @@ async function onMessage(msg: Discord.Message) {
     const classData =
       classes.current[match[1]] || classStrings[match[1].toLowerCase()];
     if (!classData) await msg.reply(`Could not find that class!`);
-    else await msg.channel.send('', { embed: getClassEmbed(classData) });
+    else await msg.channel.send({ embeds: [getClassEmbed(classData)] });
   } else if (
     classes.current &&
     msg.content[0] === '!' &&
@@ -327,7 +336,7 @@ async function onMessage(msg: Discord.Message) {
     const classData =
       classes.current[msg.content.slice(1)] ||
       classStrings[msg.content.slice(1).toLowerCase()];
-    await msg.channel.send('', { embed: getClassEmbed(classData) });
+    await msg.channel.send({ embeds: [getClassEmbed(classData)] });
   } else if (msg.content === '!github') {
     await msg.reply('https://github.com/demipixel/slugbot');
   } else if (msg.content.startsWith('!haha ')) {
@@ -384,7 +393,7 @@ async function onMessage(msg: Discord.Message) {
       });
   } else if (
     msg.mentions.users.find(user => user.id === client.user.id) &&
-    msg.channel.type === 'text' &&
+    msg.channel.type === 'GUILD_TEXT' &&
     !msg.channel.name.startsWith('counting')
   ) {
     clever.send(msg.content.replace(client.user.toString(), '').trim(), str => {
@@ -450,7 +459,7 @@ client.on('messageReactionAdd', (reactionObj, user) =>
   onMessageReactionAdd(reactionObj, user),
 );
 async function onMessageReactionAdd(
-  reactionObj: Discord.MessageReaction,
+  reactionObj: Discord.MessageReaction | Discord.PartialMessageReaction,
   user: Discord.User | Discord.PartialUser,
 ) {
   if (!reactionObj.message.guild) return;
