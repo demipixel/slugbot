@@ -226,6 +226,7 @@ async function clientReady() {
   const guild = client.guilds.cache.first();
 
   await guild.roles.fetch();
+  await guild.channels.fetch();
 
   Object.values(MAJORS).forEach(major => {
     if (!guild.roles.cache.find(role => role.name === major)) {
@@ -246,7 +247,7 @@ async function clientReady() {
   });
 }
 
-client.on('message', msg => {
+client.on('messageCreate', msg => {
   onMessage(msg).catch(err => console.error('Error on message', err));
 });
 
