@@ -6,8 +6,11 @@ let lastPing = 0;
 // Only active if pinged in the last 5min
 const TIME_SINCE_LAST_PING = 5 * 60 * 1000;
 const MAX_MESSAGE_LENGTH = 250;
-const MAX_MESSAGES_LENGTH = 1500;
 const SPEAK_UP_IF_AFTER = 20 * 60 * 1000;
+
+const MAX_MESSAGES_LENGTH = 2000;
+const MAX_MESSAGES_COUNT = 20;
+
 let lastMessageFromAnyoneTime = Date.now();
 
 const MY_USERNAME = 'SlugBot';
@@ -16,14 +19,23 @@ const INITIAL_TEXT =
   'students who attend UC Santa Cruz. ' +
   'SlugBot is creative, witty, and very friendly.\n' +
   '\n' +
-  'DemiPixel: Hey, who are you?\n' +
-  "SlugBot: Hey DemiPixel, I'm SlugBot!\n" +
-  'DemiPixel: What are your favorite shows?\n' +
-  'SlugBot: I loved that show Queens Gambit on Netflix. And have you seen the new season of Sex Education?\n' +
-  "DemiPixel: I'm still in the middle, no spoilers!\n" +
-  "SlugBot: Ahhh alright alright, I won't spoil anything.\n";
+  "SlugBot: Hey, what's up guys?\n";
 
-let messageHistory: { username: string; message: string; time: number }[] = [];
+let messageHistory: { username: string; message: string; time?: number }[] = [
+  { username: 'DemiPixel', message: 'Hey, who are you?' },
+  { username: 'SlugBot', message: "Hey DemiPixel, I'm SlugBot!" },
+  { username: 'DemiPixel', message: 'What are your favorite shows?' },
+  {
+    username: 'SlugBot',
+    message:
+      'I loved that show Queens Gambit on Netflix. And have you seen the new season of Sex Education?',
+  },
+  { username: 'DemiPixel', message: "I'm still in the middle, no spoilers!" },
+  {
+    username: 'SlugBot',
+    message: "SlugBot: Ahhh alright alright, I won't spoil anything.",
+  },
+];
 let waitingForMessage = false;
 let lastMessageAt = 0;
 let errorsInARow = 0;
@@ -104,8 +116,9 @@ function scheduleMessage(channel: Discord.TextBasedChannels) {
 function pruneMessageHistory() {
   // Remove messages that are 20min old
   messageHistory = messageHistory.filter(
-    ({ time }) => Date.now() - time < 20 * 60 * 1000,
+    ({ time }) => !time || Date.now() - time < 20 * 60 * 1000,
   );
+  messageHistory = messageHistory.slice(-MAX_MESSAGES_COUNT);
 
   let total = 0;
   for (let i = messageHistory.length - 1; i >= 0; i--) {
@@ -140,6 +153,10 @@ function getOpenAIResponse() {
     MY_USERNAME +
     ': ';
 
+  if (Math.random() < 0.02) {
+    console.log(prompt);
+  }
+
   return axios
     .post(
       'https://api.openai.com/v1/engines/davinci-codex/completions',
@@ -148,7 +165,7 @@ function getOpenAIResponse() {
         temperature: 0.8,
         top_p: 1,
         max_tokens: 250,
-        logprobs: 0,
+        logprobs: 20,
         frequency_penalty: 0.6,
         presence_penalty: 0.2,
         best_of: 3,
