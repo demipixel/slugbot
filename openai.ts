@@ -6,14 +6,15 @@ let lastPing = 0;
 // Only active if pinged in the last 5min
 const TIME_SINCE_LAST_PING = 5 * 60 * 1000;
 const MAX_MESSAGE_LENGTH = 250;
-const MAX_MESSAGES_LENGTH = 2500;
+const MAX_MESSAGES_LENGTH = 1500;
+const SPEAK_UP_IF_AFTER = 20 * 60 * 1000;
+let lastMessageFromAnyoneTime = Date.now();
 
 const MY_USERNAME = 'SlugBot';
 const INITIAL_TEXT =
-  'The following is a conversation between SlugBot and a ' +
-  'chatroom of students who attend UC Santa Cruz. ' +
-  'SlugBot is creative, witty, and very friendly. Slugbot does not attend UC Santa Cruz but ' +
-  'is a great conversationalist with students.\n' +
+  'The following is a chatroom conversation between SlugBot and ' +
+  'students who attend UC Santa Cruz. ' +
+  'SlugBot is creative, witty, and very friendly.\n' +
   '\n' +
   'DemiPixel: Hey, who are you?\n' +
   "SlugBot: Hey DemiPixel, I'm SlugBot!\n" +
@@ -39,6 +40,11 @@ module.exports = {
     } else if (msg.content === 'STOP SLUGBOT') {
       lastPing = 0;
       return;
+    } else if (msg.content === 'RESET SLUGBOT') {
+      messageHistory = [];
+      return;
+    } else if (Date.now() - lastMessageFromAnyoneTime >= SPEAK_UP_IF_AFTER) {
+      lastPing = Date.now();
     }
 
     if (Date.now() - lastPing < TIME_SINCE_LAST_PING) {
@@ -104,7 +110,7 @@ function pruneMessageHistory() {
   let total = 0;
   for (let i = messageHistory.length - 1; i >= 0; i--) {
     const { username, message } = messageHistory[i];
-    total += username.length + 2 + message.length;
+    total += username.length + 2 + message.length + 1;
 
     if (total >= MAX_MESSAGES_LENGTH) {
       messageHistory.splice(0, i);
