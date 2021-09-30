@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as emojiLib from 'node-emoji';
 
 const fetchclasses = require('./fetchclasses');
-const Cleverbot = require('./cleverbot');
+// const Cleverbot = require('./cleverbot');
 const EXTERNAL: {
   ready: (client: Discord.Client) => Promise<unknown>;
   message: (
@@ -14,10 +14,11 @@ const EXTERNAL: {
 }[] = [
   require('./counting.ts'),
   require('./gold.ts'),
+  require('./openai'),
   // require('./virus.js'),
 ];
 
-const clever = new Cleverbot();
+// const clever = new Cleverbot();
 const client = new Discord.Client({
   intents: [
     Discord.Intents.FLAGS.GUILD_MEMBERS,
@@ -392,17 +393,17 @@ async function onMessage(msg: Discord.Message) {
       .catch(err => {
         console.log('Error sending message', err);
       });
-  } else if (
-    msg.mentions.users.find(user => user.id === client.user.id) &&
-    msg.channel.type === 'GUILD_TEXT' &&
-    !msg.channel.name.startsWith('counting')
-  ) {
-    clever.send(msg.content.replace(client.user.toString(), '').trim(), str => {
-      if (str)
-        msg
-          .reply(str.replace(/\*/g, '\\*'))
-          .catch(err => console.error('Error sending cleverbot response', err));
-    });
+    // } else if (
+    //   msg.mentions.users.find(user => user.id === client.user.id) &&
+    //   msg.channel.type === 'GUILD_TEXT' &&
+    //   !msg.channel.name.startsWith('counting')
+    // ) {
+    //   clever.send(msg.content.replace(client.user.toString(), '').trim(), str => {
+    //     if (str)
+    //       msg
+    //         .reply(str.replace(/\*/g, '\\*'))
+    //         .catch(err => console.error('Error sending cleverbot response', err));
+    //   });
   }
 
   EXTERNAL.forEach((e, index) => {
