@@ -228,6 +228,7 @@ async function clientReady() {
 
   await guild.roles.fetch();
   await guild.channels.fetch();
+  await guild.emojis.fetch();
 
   Object.values(MAJORS).forEach(major => {
     if (!guild.roles.cache.find(role => role.name === major)) {
@@ -450,8 +451,12 @@ function getClassEmbed(classData) {
       { name: 'Instructor', value: classData.meeting.instructor, inline: true },
       { name: 'Time', value: classData.meeting.time, inline: true },
       { name: 'Location', value: classData.meeting.room, inline: true },
-      { name: 'Requirements', value: classData.requirements || 'None' },
-      { name: 'Notes', value: classData.notes || 'None' },
+      {
+        name: 'Requirements',
+        value: classData.requirements || 'None',
+        inline: false,
+      },
+      { name: 'Notes', value: classData.notes || 'None', inline: false },
     ],
     footer: { text: 'Information from http://pisa.ucsc.edu/class_search/' },
   });
